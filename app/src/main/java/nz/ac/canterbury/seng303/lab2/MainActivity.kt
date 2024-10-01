@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     topBar = {
                         // Add your AppBar content here
                         TopAppBar(
-                            title = { Text("SENG303 Lab 2") },
+                            title = { Text("303 a2") },
                             navigationIcon = {
                                 IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
@@ -68,44 +68,9 @@ class MainActivity : ComponentActivity() {
                 ) {
 
                     Box(modifier = Modifier.padding(it)) {
-                        val createNoteViewModel: CreateNoteViewModel = viewModel()
-                        val editNoteViewModel: EditNoteViewModel = viewModel()
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
                                 Home(navController = navController)
-                            }
-                            composable(
-                                "NoteCard/{noteId}",
-                                arguments = listOf(navArgument("noteId") {
-                                    type = NavType.StringType
-                                })
-                            ) { backStackEntry ->
-                                val noteId = backStackEntry.arguments?.getString("noteId")
-                                noteId?.let { noteIdParam: String -> NoteCard(noteIdParam, noteViewModel) }
-                            }
-                            composable("EditNote/{noteId}", arguments = listOf(navArgument("noteId") {
-                                type = NavType.StringType
-                            })
-                            ) { backStackEntry ->
-                                val noteId = backStackEntry.arguments?.getString("noteId")
-                                noteId?.let { noteIdParam: String -> EditNote(noteIdParam, editNoteViewModel, noteViewModel, navController = navController) }
-                            }
-                            composable("NoteList") {
-                                NoteList(navController, noteViewModel)
-                            }
-                            composable("NoteGrid") {
-                                NoteGrid(navController, noteViewModel)
-                            }
-                            composable("CreateNote") {
-                                CreateNote(navController = navController, title = createNoteViewModel.title,
-                                    onTitleChange = {newTitle ->
-                                            val title = newTitle.replace("badword", "*******")
-                                            createNoteViewModel.updateTitle(title)
-                                    },
-                                    content = createNoteViewModel.content, onContentChange = {newContent -> createNoteViewModel.updateContent(newContent)},
-                                    createNoteFn = {title, content -> noteViewModel.createNote(title, content)}
-                                    )
-//                                CreateNoteStandAlone(navController = navController)
                             }
                         }
                     }
@@ -124,17 +89,8 @@ fun Home(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Welcome to Lab 2")
-        Button(onClick = { navController.navigate("CreateNote") }) {
-            Text("Create Note")
-        }
-        Button(onClick = { navController.navigate("NoteCard/1") }) {
-            Text("Go to Note Card")
-        }
-        Button(onClick = { navController.navigate("NoteList") }) {
-            Text("Note List")
-        }
-        Button(onClick = { navController.navigate("NoteGrid") }) {
-            Text("Note Grid")
-        }
+//        Button(onClick = { navController.navigate("CreateNote") }) {
+//            Text("Create Note")
+//        }
     }
 }
