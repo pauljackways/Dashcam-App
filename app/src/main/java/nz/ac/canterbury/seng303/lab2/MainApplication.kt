@@ -2,7 +2,6 @@ package nz.ac.canterbury.seng303.lab2
 
 import android.app.Application
 import kotlinx.coroutines.FlowPreview
-import nz.ac.canterbury.seng303.lab2.datastore.dataAccessModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -14,7 +13,7 @@ class MainApplication: Application() {
 
         startKoin {
             androidContext(this@MainApplication)
-            modules(dataAccessModule)
+//            modules(dataAccessModule)
         }
     }
 }

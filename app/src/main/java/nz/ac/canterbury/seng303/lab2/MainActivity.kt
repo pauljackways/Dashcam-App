@@ -26,26 +26,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import nz.ac.canterbury.seng303.lab2.screens.CreateNote
-import nz.ac.canterbury.seng303.lab2.screens.EditNote
-import nz.ac.canterbury.seng303.lab2.screens.NoteCard
-import nz.ac.canterbury.seng303.lab2.screens.NoteGrid
-import nz.ac.canterbury.seng303.lab2.screens.NoteList
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
-import nz.ac.canterbury.seng303.lab2.viewmodels.CreateNoteViewModel
-import nz.ac.canterbury.seng303.lab2.viewmodels.EditNoteViewModel
-import nz.ac.canterbury.seng303.lab2.viewmodels.NoteViewModel
-import org.koin.androidx.viewmodel.ext.android.viewModel as koinViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val noteViewModel: NoteViewModel by koinViewModel()
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        noteViewModel.loadDefaultNotesIfNoneExist()
 
         setContent {
             Lab1Theme {
