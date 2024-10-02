@@ -1,67 +1,98 @@
 package nz.ac.canterbury.seng303.lab2.util
 
+
 import android.Manifest
-import android.app.Activity
-import android.content.ContentValues
-import android.content.Context
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.media.MediaRecorder
-import android.provider.MediaStore
-import android.widget.LinearLayout
-import androidx.camera.view.PreviewView
+import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import android.app.Activity
+import android.content.Context
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+import android.widget.LinearLayout
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import androidx.camera.core.CameraSelector
-import androidx.camera.video.VideoCapture
-import androidx.camera.view.LifecycleCameraController
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoRecordEvent
+import androidx.camera.view.video.AudioConfig
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import nz.ac.canterbury.seng303.lab2.viewmodels.CameraStateViewModel
 import java.io.File
 
-object Camera {
-    var isRecording by mutableStateOf(false)
 
-    private const val REQUEST_CODE_PERMISSIONS = 1001
-    private val REQUIRED_PERMISSIONS = arrayOf(
+class Camera(private val cameraStateViewModel: CameraStateViewModel) {
+
+    private var recording: Recording? = null
+
+    private val requestCodePermissions = 1001
+    private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,
         Manifest.permission.RECORD_AUDIO
     )
 
     private fun hasPermissions(context: Context): Boolean {
-        return REQUIRED_PERMISSIONS.all { permission ->
+        return requiredPermissions.all { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun requestPermissions(activity: Activity) {
-        ActivityCompat.requestPermissions(activity, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+        ActivityCompat.requestPermissions(activity, requiredPermissions, requestCodePermissions)
     }
 
     @Composable
-    fun CameraPreview(context: Context) {
+    fun InitCamera() {
+        val context = LocalContext.current
+        var hasPermissions by rememberSaveable { mutableStateOf(false) }
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (hasPermissions) {
+                CameraPreview(context, cameraStateViewModel)
+            } else {
+                NoCameraPermissions(context) {
+                    // Callback to update permissions
+                    hasPermissions = hasPermissions(context)
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    @Composable
+    fun CameraPreview(context: Context, cameraStateViewModel: CameraStateViewModel) {
+        if (!hasPermissions(context)) {
+            recording?.stop()
+            return
+        }
+
         val lifecycleOwner = LocalLifecycleOwner.current
         val cameraController = remember { LifecycleCameraController(context) }
 
-        // Ensure that the camera is being bound to the lifecycle
         DisposableEffect(Unit) {
             cameraController.bindToLifecycle(lifecycleOwner)
             onDispose {
-                cameraController.unbind() // Clean up resources when composable is disposed
+                cameraController.unbind()
             }
         }
 
@@ -72,6 +103,42 @@ object Camera {
                 controller = cameraController
             }
         })
+
+        if (cameraStateViewModel.isRecording()) {
+            if(recording != null) {
+                recording?.stop()
+                // save??????
+            }
+
+            val outputFile = File(context.filesDir, "temp.mp4")
+
+            recording = cameraController.startRecording(
+                FileOutputOptions.Builder(outputFile).build(),
+                AudioConfig.create(true),
+                ContextCompat.getMainExecutor(context)
+            ) { event ->
+                when (event) {
+                    is VideoRecordEvent.Finalize -> handleFinalizeEvent(event, outputFile)
+                }
+            }
+
+        } else {
+
+        }
+    }
+    private fun handleFinalizeEvent(finalizeEvent: VideoRecordEvent.Finalize, outputFile: File) {
+        if (finalizeEvent.hasError()) {
+            outputFile.delete() // Clean up file on error
+        } else {
+            /// save
+        }
+    }
+
+    // Function to create a file for saving video recordings
+    private fun createFile(context: Context): File {
+        val videoFileName = "video_${System.currentTimeMillis()}.mp4"
+        val storageDir = context.filesDir // Adjust as necessary for external storage
+        return File(storageDir, videoFileName)
     }
 
 
@@ -82,40 +149,21 @@ object Camera {
             onClick = {
                 activity?.let { requestPermissions(it) }
                 onPermissionChange()
-
             }
         ) {
             Text(text = "Start camera")
         }
     }
-    @Composable
-    fun InitCamera() {
-        val context = LocalContext.current
-        var hasPermissions by remember { mutableStateOf(false)}
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            if (hasPermissions) {
-                CameraPreview(context)
-            } else {
-                NoCameraPermissions(context) {
-                    // Callback to update permissions
-                    hasPermissions = hasPermissions(context)
-                }
-            }
-        }
-    }
-    fun startRecording(context: Context) {
-
+    fun startRecording() {
+        cameraStateViewModel.startRecording()
     }
 
     fun saveRecording() {
-
+        cameraStateViewModel.saveRecording()
     }
-    fun stopRecording() {
 
+    fun stopRecording() {
+        cameraStateViewModel.stopRecording()
     }
 }

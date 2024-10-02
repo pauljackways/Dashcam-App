@@ -28,9 +28,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 import nz.ac.canterbury.seng303.lab2.util.Camera
+import nz.ac.canterbury.seng303.lab2.viewmodels.CameraStateViewModel
 
 class MainActivity : ComponentActivity() {
-
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Lab1Theme {
+                val cameraStateViewModel: CameraStateViewModel = viewModel()
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {
@@ -59,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(it)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController)
+                                Home(navController = navController, cameraStateViewModel)
                             }
                         }
                     }
@@ -71,14 +72,15 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun Home(navController: NavController) {
+fun Home(navController: NavController, cameraStateViewModel: CameraStateViewModel) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Welcome to Lab 2")
-        //Camera.InitCamera()
+        val camera = Camera(cameraStateViewModel)
+        camera.InitCamera()
 //        Button(onClick = { navController.navigate("CreateNote") }) {
 //            Text("Create Note")
 //        }
