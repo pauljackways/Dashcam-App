@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
+import nz.ac.canterbury.seng303.lab2.util.Camera
 
 class MainActivity : ComponentActivity() {
 
@@ -77,6 +78,7 @@ fun Home(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Welcome to Lab 2")
+        //Camera.InitCamera()
 //        Button(onClick = { navController.navigate("CreateNote") }) {
 //            Text("Create Note")
 //        }
