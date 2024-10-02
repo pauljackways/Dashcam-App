@@ -26,6 +26,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(it)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController)
+                                MainScreen(navController = navController)
                             }
 
                             composable("Settings") {
@@ -73,16 +74,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-@Composable
-fun Home(navController: NavController) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Button(onClick = { navController.navigate("Settings") }) {
-            Text("Settings")
-        }
-    }
-}
