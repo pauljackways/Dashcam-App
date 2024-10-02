@@ -26,6 +26,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 
 class MainActivity : ComponentActivity() {
@@ -40,11 +41,10 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {
-                        // Add your AppBar content here
                         TopAppBar(
                             title = { Text("303 a2") },
                             navigationIcon = {
-                                IconButton(onClick = { navController.popBackStack() }) {
+                                IconButton(onClick = { navController.navigate("Home") }) {
                                     Icon(
                                         imageVector = Icons.Default.ArrowBack,
                                         contentDescription = "Back"
@@ -60,6 +60,11 @@ class MainActivity : ComponentActivity() {
                             composable("Home") {
                                 Home(navController = navController)
                             }
+
+                            composable("Settings") {
+                                Settings(navController)
+                            }
+
                         }
                     }
                 }
@@ -76,9 +81,8 @@ fun Home(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Welcome to Lab 2")
-//        Button(onClick = { navController.navigate("CreateNote") }) {
-//            Text("Create Note")
-//        }
+        Button(onClick = { navController.navigate("Settings") }) {
+            Text("Settings")
+        }
     }
 }
