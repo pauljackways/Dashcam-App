@@ -2,10 +2,13 @@ package nz.ac.canterbury.seng303.lab2.viewmodels
 
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
 class RecordingLogicViewModel : ViewModel() {
-    var isRecording = false
+    var isRecording: Boolean by mutableStateOf(false)
         private set
 
 
@@ -18,13 +21,11 @@ class RecordingLogicViewModel : ViewModel() {
         override fun run() {
             val lengthMillisNullSafe = videoSectionLengthMillis
                 ?: throw IllegalArgumentException("Video section length is null!")
-            val saveLocationNullSafe = videoSectionSaveLocation
-                ?: throw IllegalArgumentException("Save location is null!")
 
             println("RUNNING!!!") // for testing
 
             // TODO Delete old video section (e.g., from 30 seconds ago) if it exists?
-            stopAndSaveVideoSection(saveLocationNullSafe)
+            stopAndSaveVideoSection()
             startVideoSection()
 
             taskHandler.postDelayed(this, lengthMillisNullSafe)
@@ -34,6 +35,10 @@ class RecordingLogicViewModel : ViewModel() {
 
 
     fun startRecording(timePeriodMillis: Long, saveLocation: String) {
+        // TODO handle more gracefully?
+        if (isRecording) {
+            throw IllegalStateException("Already recording!")
+        }
         isRecording = true
         videoSectionLengthMillis = timePeriodMillis
         videoSectionSaveLocation = saveLocation
@@ -41,17 +46,16 @@ class RecordingLogicViewModel : ViewModel() {
         taskHandler.post(startNextVideoSection)
     }
 
-    fun stopAndSaveRecording(saveLocation: String /* might not be string */) {
-        // Stop task from running periodically
-        taskHandler.removeCallbacks(startNextVideoSection)
-        stopAndSaveVideoSection(saveLocation)
+    fun stopAndSaveRecording() {
+        stopAndSaveVideoSection()
+        cancelRecording()
 
         // TODO stitch together videos and save to gallery (ffmpeg)
     }
 
     fun cancelRecording() {
-        // Stop task from running periodically
         taskHandler.removeCallbacks(startNextVideoSection)
+        isRecording = false
         // TODO camera.stopRecording()
         // TODO clear saved video sections?
     }
@@ -61,7 +65,8 @@ class RecordingLogicViewModel : ViewModel() {
         // camera.startRecording()
     }
 
-    private fun stopAndSaveVideoSection(saveLocation: String /* might not be string */) {
+    private fun stopAndSaveVideoSection() {
+        val saveLocationNullSafe = videoSectionSaveLocation ?: throw IllegalArgumentException("Save location is null!")
         // TODO save to save location with date / time identifier
         // TODO camera.stopRecording(saveLocation, current time)
     }
