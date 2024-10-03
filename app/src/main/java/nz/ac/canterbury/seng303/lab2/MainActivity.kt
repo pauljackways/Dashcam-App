@@ -39,6 +39,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             Lab1Theme {
                 val cameraStateViewModel: CameraStateViewModel = viewModel()
+                cameraStateViewModel.stopRecording()
+                cameraStateViewModel.clearSaveRequest()
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {

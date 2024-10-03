@@ -83,6 +83,7 @@ class Camera(private val cameraStateViewModel: CameraStateViewModel) {
     fun CameraPreview(context: Context, cameraStateViewModel: CameraStateViewModel) {
         if (!hasPermissions(context)) {
             recording?.stop()
+            recording = null
             return
         }
 
@@ -104,13 +105,9 @@ class Camera(private val cameraStateViewModel: CameraStateViewModel) {
             }
         })
 
-        if (cameraStateViewModel.isRecording()) {
-            if(recording != null) {
-                recording?.stop()
-                // save??????
-            }
+        if (cameraStateViewModel.isRecording() && recording == null) {
 
-            val outputFile = File(context.filesDir, "temp.mp4")
+            val outputFile = File(context.filesDir, convertTimestampToVideoTitle(System.currentTimeMillis()))
 
             recording = cameraController.startRecording(
                 FileOutputOptions.Builder(outputFile).build(),
@@ -122,23 +119,19 @@ class Camera(private val cameraStateViewModel: CameraStateViewModel) {
                 }
             }
 
-        } else {
-
+        } else if (!cameraStateViewModel.isRecording() && recording != null) {
+            recording?.stop() // calls handleFinalizeEvent
+            recording = null // Safety
         }
     }
     private fun handleFinalizeEvent(finalizeEvent: VideoRecordEvent.Finalize, outputFile: File) {
+        recording = null
         if (finalizeEvent.hasError()) {
             outputFile.delete() // Clean up file on error
-        } else {
-            /// save
+        } else if (cameraStateViewModel.saveRequested()) {
+            // Save
+            cameraStateViewModel.clearSaveRequest()
         }
-    }
-
-    // Function to create a file for saving video recordings
-    private fun createFile(context: Context): File {
-        val videoFileName = "video_${System.currentTimeMillis()}.mp4"
-        val storageDir = context.filesDir // Adjust as necessary for external storage
-        return File(storageDir, videoFileName)
     }
 
 
