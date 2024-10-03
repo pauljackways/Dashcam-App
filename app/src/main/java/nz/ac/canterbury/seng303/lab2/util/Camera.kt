@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
@@ -78,7 +79,7 @@ class Camera(private val cameraStateViewModel: CameraStateViewModel) {
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission") // handled elsewhere
     @Composable
     fun CameraPreview(context: Context, cameraStateViewModel: CameraStateViewModel) {
         if (!hasPermissions(context)) {
@@ -124,6 +125,8 @@ class Camera(private val cameraStateViewModel: CameraStateViewModel) {
             recording = null // Safety
         }
     }
+
+
     private fun handleFinalizeEvent(finalizeEvent: VideoRecordEvent.Finalize, outputFile: File) {
         recording = null
         if (finalizeEvent.hasError()) {
@@ -149,14 +152,17 @@ class Camera(private val cameraStateViewModel: CameraStateViewModel) {
     }
 
     fun startRecording() {
+        Log.d("Camera", "Start recording called")
         cameraStateViewModel.startRecording()
     }
 
     fun saveRecording() {
+        Log.d("Camera", "Save recording called")
         cameraStateViewModel.saveRecording()
     }
 
     fun stopRecording() {
+        Log.d("Camera", "Stop recording called")
         cameraStateViewModel.stopRecording()
     }
 }
