@@ -26,11 +26,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import nz.ac.canterbury.seng303.lab2.screens.MainScreen
+import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 import nz.ac.canterbury.seng303.lab2.util.Camera
 import nz.ac.canterbury.seng303.lab2.viewmodels.CameraStateViewModel
 
 class MainActivity : ComponentActivity() {
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +51,7 @@ class MainActivity : ComponentActivity() {
                         TopAppBar(
                             title = { Text("303 a2") },
                             navigationIcon = {
-                                IconButton(onClick = { navController.popBackStack() }) {
+                                IconButton(onClick = { navController.navigate("Home") }) {
                                     Icon(
                                         imageVector = Icons.Default.ArrowBack,
                                         contentDescription = "Back"
@@ -62,29 +65,17 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(it)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                Home(navController = navController, cameraStateViewModel)
+                                MainScreen(navController = navController, cameraStateViewModel)
                             }
+
+                            composable("Settings") {
+                                Settings(navController)
+                            }
+
                         }
                     }
                 }
             }
         }
-    }
-}
-
-
-@Composable
-fun Home(navController: NavController, cameraStateViewModel: CameraStateViewModel) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Welcome to Lab 2")
-        val camera = Camera(cameraStateViewModel)
-        camera.InitCamera()
-//        Button(onClick = { navController.navigate("CreateNote") }) {
-//            Text("Create Note")
-//        }
     }
 }
