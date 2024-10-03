@@ -11,6 +11,12 @@ class Accelerometer(context: Context, private val listener: AccelerometerListene
     private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accelerometer: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
 
+    private val threshold = 0.5f
+
+    private var lastX = 0f
+    private var lastY = 0f
+    private var lastZ = 0f
+
     fun start() {
         accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
@@ -28,8 +34,16 @@ class Accelerometer(context: Context, private val listener: AccelerometerListene
             val y = it.values[1]
             val z = it.values[2]
 
-            // Notify the listener
-            listener.onAccelerationChanged(x, y, z)
+            // Check if the change exceeds the threshold
+            if (Math.abs(x - lastX) > threshold || Math.abs(y - lastY) > threshold || Math.abs(z - lastZ) > threshold) {
+                // Notify the listener
+                listener.onAccelerationChanged(x, y, z)
+
+                // Update the last reported values
+                lastX = x
+                lastY = y
+                lastZ = z
+            }
         }
     }
 
