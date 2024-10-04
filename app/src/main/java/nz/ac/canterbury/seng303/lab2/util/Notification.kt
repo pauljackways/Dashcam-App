@@ -17,7 +17,9 @@ import androidx.core.content.ContextCompat
 import nz.ac.canterbury.seng303.lab2.MainActivity
 
 object Notification {
-    private const val requestCodePermissions = 30369
+    const val RECORDING_NOTIFICATION_ID = 1
+
+    private const val REQUEST_CODE_PERMISSIONS = 30369
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val requiredPermissions = arrayOf(
@@ -32,14 +34,14 @@ object Notification {
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun requestPermissions(activity: Activity) {
-        ActivityCompat.requestPermissions(activity, requiredPermissions, requestCodePermissions)
+    fun requestPermissions(activity: Activity) {
+        ActivityCompat.requestPermissions(activity, requiredPermissions, REQUEST_CODE_PERMISSIONS)
     }
 
 
-    fun sendNotification(context: Context) {
+    fun sendRecordingNotification(context: Context) {
         val channelId = "active-recording-channel-id"
-        val notificationId = 1
+        val notificationId = RECORDING_NOTIFICATION_ID
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
@@ -77,15 +79,21 @@ object Notification {
         )
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Hello, Findlay!")
-            .setContentText("This is a test notification.")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent)  // Set the PendingIntent
-            .setAutoCancel(true)  // Automatically remove the notification when clicked
+            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .setContentTitle("Your Dashcam is Recording")
+            .setContentText("Tap here to open the app")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setContentIntent(pendingIntent)
+//            .setOngoing(true)
+        // TODO ongoing notifications requires a foreground service
 
         with(NotificationManagerCompat.from(context)) {
             notify(notificationId, builder.build())
         }
+    }
+
+    fun cancelRecordingNotification(context: Context) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(RECORDING_NOTIFICATION_ID)
     }
 }

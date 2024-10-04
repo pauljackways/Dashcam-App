@@ -1,11 +1,13 @@
 package nz.ac.canterbury.seng303.lab2.viewmodels
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import nz.ac.canterbury.seng303.lab2.util.Notification
 
 class RecordingLogicViewModel : ViewModel() {
     var isRecording: Boolean by mutableStateOf(false)

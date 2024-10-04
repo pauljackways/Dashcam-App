@@ -1,5 +1,6 @@
 package nz.ac.canterbury.seng303.lab2
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,8 +19,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -29,10 +33,10 @@ import androidx.navigation.compose.rememberNavController
 import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
+import nz.ac.canterbury.seng303.lab2.util.AppLifecycleObserver
+import nz.ac.canterbury.seng303.lab2.util.Notification
 
 class MainActivity : ComponentActivity() {
-
-
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

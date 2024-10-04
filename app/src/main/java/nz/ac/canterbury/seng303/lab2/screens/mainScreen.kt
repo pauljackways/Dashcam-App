@@ -1,6 +1,8 @@
 package nz.ac.canterbury.seng303.lab2.screens
 
+import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.provider.MediaStore
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -10,9 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import nz.ac.canterbury.seng303.lab2.util.AppLifecycleObserver
+import nz.ac.canterbury.seng303.lab2.util.Notification
 import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 
 @Composable
@@ -20,7 +25,17 @@ fun MainScreen(
     navController: NavController,
     recordingLogicViewModel: RecordingLogicViewModel = viewModel()
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = AppLifecycleObserver(context, recordingLogicViewModel)
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -80,7 +95,15 @@ fun MainScreen(
             } else {
                 Button(
                     // TODO update with actual save location, set time period from settings
-                    onClick = { recordingLogicViewModel.startRecording(2 * 1000L, "[replace with actual save location]") },
+                    onClick = {
+                        recordingLogicViewModel.startRecording(
+                            2 * 1000L,
+                            "[replace with actual save location]",
+                        )
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            Notification.requestPermissions(context as Activity)
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
