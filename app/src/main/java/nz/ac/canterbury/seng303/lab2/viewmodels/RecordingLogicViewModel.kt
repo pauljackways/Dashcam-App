@@ -1,73 +1,96 @@
 package nz.ac.canterbury.seng303.lab2.viewmodels
 
-import android.os.Handler
-import android.os.Looper
+import androidx.camera.core.CameraSelector
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.Recorder
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
 class RecordingLogicViewModel : ViewModel() {
+
+    var toggle: Boolean by mutableStateOf(false)
+        private set
+
+    fun toggleRender() {
+        toggle = !toggle
+    }
+    // Recording-related properties
+    private var _recording: Recording? = null
+        private set
+
+    private var saveRequested = false
+
+    // Getter and Setter for recording
+    fun getRecording(): Recording? {
+        return _recording
+    }
+
+    fun setRecording(newRecording: Recording?) {
+        _recording = newRecording
+    }
+
+    fun saveRequested(): Boolean {
+        return saveRequested
+    }
+
+    fun requestSave() {
+        saveRequested = true
+    }
+
+    fun clearSaveRequest() {
+        saveRequested = false
+    }
+
+    // Mutable state for recording status
     var isRecording: Boolean by mutableStateOf(false)
         private set
 
 
-//    TODO private var camera: Camera class
-    private var videoSectionLengthMillis: Long? = null
-    private var videoSectionSaveLocation: String? = null
+    // VideoCapture property for handling recording
+    private var _videoCapture: VideoCapture<Recorder>? by mutableStateOf(null)
+        private set
 
-    private val taskHandler = Handler(Looper.getMainLooper())
-    private val startNextVideoSection = object : Runnable {
-        override fun run() {
-            val lengthMillisNullSafe = videoSectionLengthMillis
-                ?: throw IllegalArgumentException("Video section length is null!")
-
-            println("RUNNING!!!") // for testing
-
-            // TODO Delete old video section (e.g., from 30 seconds ago) if it exists?
-            stopAndSaveVideoSection()
-            startVideoSection()
-
-            taskHandler.postDelayed(this, lengthMillisNullSafe)
-
-        }
+    // Getter for videoCapture
+    fun getVideoCapture(): VideoCapture<Recorder>? {
+        return _videoCapture
     }
 
+    // Recording start state
+    var recordingStart: Boolean by mutableStateOf(false)
 
-    fun startRecording(timePeriodMillis: Long, saveLocation: String) {
-        // TODO handle more gracefully?
-        if (isRecording) {
-            throw IllegalStateException("Already recording!")
-        }
+    fun startRecording() {
+        recordingStart = true
         isRecording = true
-        videoSectionLengthMillis = timePeriodMillis
-        videoSectionSaveLocation = saveLocation
-
-        taskHandler.post(startNextVideoSection)
     }
 
-    fun stopAndSaveRecording() {
-        stopAndSaveVideoSection()
-        cancelRecording()
-
-        // TODO stitch together videos and save to gallery (ffmpeg)
-    }
-
-    fun cancelRecording() {
-        taskHandler.removeCallbacks(startNextVideoSection)
+    fun stopRecording() {
+        _recording?.stop()
+        recordingStart = false
         isRecording = false
-        // TODO camera.stopRecording()
-        // TODO clear saved video sections?
     }
 
+    // Audio enable state
+    var audioEnable: Boolean by mutableStateOf(false)
+        private set
 
-    private fun startVideoSection() {
-        // camera.startRecording()
+    fun toggleAudioEnable() {
+        audioEnable = !audioEnable
     }
 
-    private fun stopAndSaveVideoSection() {
-        val saveLocationNullSafe = videoSectionSaveLocation ?: throw IllegalArgumentException("Save location is null!")
-        // TODO save to save location with date / time identifier
-        // TODO camera.stopRecording(saveLocation, current time)
+    // Camera selector state (for front or back camera)
+    private var _cameraSelector: CameraSelector by mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA)
+        private set
+
+    // Getter for cameraSelector
+    fun getCameraSelector(): CameraSelector {
+        return _cameraSelector
+    }
+
+    // Setter for cameraSelector
+    fun setCameraSelector(newCameraSelector: CameraSelector) {
+        _cameraSelector = newCameraSelector
     }
 }

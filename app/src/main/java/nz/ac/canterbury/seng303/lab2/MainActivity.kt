@@ -29,8 +29,6 @@ import androidx.navigation.compose.rememberNavController
 import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
-import nz.ac.canterbury.seng303.lab2.util.Camera
-import nz.ac.canterbury.seng303.lab2.viewmodels.CameraStateViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -41,9 +39,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Lab1Theme {
-                val cameraStateViewModel: CameraStateViewModel = viewModel()
-                cameraStateViewModel.stopRecording()
-                cameraStateViewModel.clearSaveRequest()
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {
@@ -65,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(it)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
-                                MainScreen(navController = navController, cameraStateViewModel)
+                                MainScreen(navController = navController)
                             }
 
                             composable("Settings") {
