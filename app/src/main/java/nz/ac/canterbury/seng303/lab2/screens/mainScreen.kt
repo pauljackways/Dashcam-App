@@ -21,7 +21,6 @@ fun MainScreen(
     recordingLogicViewModel: RecordingLogicViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val isRecording = recordingLogicViewModel.isRecording
 
     Column(
         modifier = Modifier
@@ -54,7 +53,7 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            if (isRecording) {
+            if (recordingLogicViewModel.isRecording) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
@@ -62,7 +61,7 @@ fun MainScreen(
                 ) {
 
                     Button(
-                        onClick = { /* Capture frame action */ },
+                        onClick = { recordingLogicViewModel.stopAndSaveRecording() },
                         modifier = Modifier.size(100.dp),
                         shape = MaterialTheme.shapes.medium
                     ) {
@@ -70,7 +69,7 @@ fun MainScreen(
                     }
 
                     Button(
-                        onClick = { recordingLogicViewModel.stopAndSaveRecording() },
+                        onClick = { recordingLogicViewModel.cancelRecording() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
@@ -80,7 +79,8 @@ fun MainScreen(
                 }
             } else {
                 Button(
-                    onClick = { recordingLogicViewModel.startRecording() },
+                    // TODO update with actual save location, set time period from settings
+                    onClick = { recordingLogicViewModel.startRecording(2 * 1000L, "[replace with actual save location]") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
