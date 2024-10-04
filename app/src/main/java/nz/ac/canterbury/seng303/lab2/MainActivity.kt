@@ -71,22 +71,20 @@ class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
     }
 
     override fun onAccelerationChanged(x: Float, y: Float, z: Float) {
-        // Log the accelerometer data for debugging purposes
         System.out.println("Accelerometer: x: $x, y: $y, z: $z")
+}
 
-        // You can also update the UI or perform actions based on the accelerometer values
-        // For example, you could update a state variable or call a method in MainScreen
+    override fun onCrashDetected() {
+        println("Crash detected!")
     }
 
     override fun onResume() {
         super.onResume()
-        // Start the accelerometer when the activity is resumed
         accelerometer.start()
     }
 
     override fun onPause() {
         super.onPause()
-        // Stop the accelerometer when the activity is paused
         accelerometer.stop()
     }
 }
