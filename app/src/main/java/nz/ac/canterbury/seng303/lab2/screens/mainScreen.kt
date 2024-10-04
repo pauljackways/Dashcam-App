@@ -9,14 +9,11 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.widget.LinearLayout
 import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
-import androidx.camera.view.video.AudioConfig
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +39,10 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.core.util.Consumer
-import java.text.SimpleDateFormat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
@@ -57,11 +57,28 @@ fun MainScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraController = remember { LifecycleCameraController(context) }
     var isCameraInitialized by remember { mutableStateOf(false) }
+    var previewView : PreviewView = remember { PreviewView(context) }
+    val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
+
+    LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
+        try {
+            lifecycleOwner.lifecycleScope.launch {
+                videoCapture.value = context.createVideoCaptureUseCase(
+                    lifecycleOwner = lifecycleOwner,
+                    cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
+                    previewView = previewView
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("Camera", "Error initializing camera: ${e.message}")
+            // Handle the error, show a toast or update the UI accordingly
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        InitCamera(context, cameraController, lifecycleOwner, recordingLogicViewModel) {
+        InitCamera(context, previewView, cameraController, lifecycleOwner, recordingLogicViewModel) {
             isCameraInitialized = true
         }
 
@@ -123,7 +140,7 @@ fun MainScreen(
                     }
                 } else if (isCameraInitialized && hasPermissions(context)) {
                     Button(
-                        onClick = { startRecording(context, cameraController, recordingLogicViewModel) },
+                        onClick = { startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
@@ -139,6 +156,7 @@ fun MainScreen(
 @Composable
 fun InitCamera(
     context: Context,
+    previewView: PreviewView,
     cameraController: LifecycleCameraController,
     lifecycleOwner: LifecycleOwner,
     recordingLogicViewModel: RecordingLogicViewModel,
@@ -152,7 +170,7 @@ fun InitCamera(
         verticalArrangement = Arrangement.Center
     ) {
         if (hasPermissions) {
-            CameraPreview(context, cameraController, lifecycleOwner) {
+            CameraPreview(context, previewView, cameraController, lifecycleOwner) {
                 onCameraInitialized()
             }
         } else {
@@ -167,20 +185,18 @@ fun InitCamera(
 
 @SuppressLint("MissingPermission") // handled elsewhere
 @Composable
-fun CameraPreview(context: Context, cameraController: LifecycleCameraController, lifecycleOwner: LifecycleOwner, onCameraInitialized: () -> Unit) {
+fun CameraPreview(context: Context, previewView: PreviewView, cameraController: LifecycleCameraController, lifecycleOwner: LifecycleOwner, onCameraInitialized: () -> Unit) {
     if (!hasPermissions(context)) {
         return
     }
+
     cameraController.bindToLifecycle(lifecycleOwner)
     onCameraInitialized()
 
-    AndroidView(factory = { innerContext ->
-        PreviewView(innerContext).apply {
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            scaleType = PreviewView.ScaleType.FILL_START
-            controller = cameraController
-        }
-    })
+    AndroidView(
+        factory = {previewView},
+        modifier = Modifier.fillMaxSize()
+    )
 }
 
 @Composable
@@ -194,6 +210,39 @@ fun NoCameraPermissions(context: Context, onPermissionChange: () -> Unit) {
     ) {
         Text(text = "Start camera")
     }
+}
+
+@SuppressLint("NewApi")
+suspend fun Context.createVideoCaptureUseCase(
+    lifecycleOwner: LifecycleOwner,
+    cameraSelector: CameraSelector,
+    previewView : PreviewView
+) : VideoCapture<Recorder> {
+    val preview = Preview.Builder()
+        .build()
+        .apply {
+            setSurfaceProvider(previewView.surfaceProvider)
+        }
+    val qualitySelector = QualitySelector.from(
+        Quality.FHD,
+        FallbackStrategy.lowerQualityOrHigherThan(Quality.FHD)
+    )
+
+    val recorder = Recorder.Builder()
+        .setExecutor(mainExecutor)
+        .setQualitySelector(qualitySelector)
+        .build()
+    val videoCapture = VideoCapture.withOutput(recorder)
+
+    val cameraProvider = getCameraProvider()
+    cameraProvider.unbindAll()
+    cameraProvider.bindToLifecycle(
+        lifecycleOwner,
+        cameraSelector,
+        preview,
+        videoCapture
+    )
+    return videoCapture
 }
 
 
@@ -213,41 +262,44 @@ private fun requestPermissions(activity: Activity) {
     ActivityCompat.requestPermissions(activity, requiredPermissions, requestCodePermissions)
 }
 
-
-
-
-private fun handleFinalizeEvent(context: Context, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel, finalizeEvent: VideoRecordEvent.Finalize) {
+private fun handleFinalizeEvent(context: Context, previewView: PreviewView, videoCapture: MutableState<VideoCapture<Recorder>?>, lifecycleOwner: LifecycleOwner, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel, finalizeEvent: VideoRecordEvent.Finalize) {
     val uri = finalizeEvent.outputResults.outputUri
-    if (uri != Uri.EMPTY) {
+    Log.i("Camera", uri.toString())
+    if (recordingLogicViewModel.saveRequested()) {
+        if (uri != Uri.EMPTY) {
+            val uriEncoded = URLEncoder.encode(
+                uri.toString(),
+                StandardCharsets.UTF_8.toString())
+        }
+        // TODO: Figure out if starting the recording should be here, or if this should callback and have logic handle it
+        startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
+        recordingLogicViewModel.clearSaveRequest()
+    } else  {
+        // Delete
         val contentResolver = context.contentResolver
         contentResolver.delete(uri, null, null)
-    } else if (recordingLogicViewModel.saveRequested()) {
-        // Save
-        recordingLogicViewModel.clearSaveRequest()
-        startRecording(context, cameraController, recordingLogicViewModel)
     }
-    //recordingLogicViewModel.recording = null
 }
 
 @SuppressLint("MissingPermission", "NewApi")
-fun startRecording(context: Context, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel) {
+fun startRecording(context: Context, previewView: PreviewView, videoCapture: MutableState<VideoCapture<Recorder>?>, lifecycleOwner: LifecycleOwner, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel) {
     Log.d("Camera", "Start recording called")
 
     val outputFile = File(context.filesDir, convertTimestampToVideoTitle(System.currentTimeMillis()))
 
-    recordingLogicViewModel.getVideoCapture()?.let { videoCapture ->
-        recordingLogicViewModel.recordingStart = true
+    videoCapture.value?.let { vidCap ->
         recordingLogicViewModel.setRecording(startRecordingVideo(
             context = context,
-            videoCapture = videoCapture,
+            videoCapture = vidCap,
             outputFile = outputFile,
             executor = context.mainExecutor,
             audioEnabled = recordingLogicViewModel.audioEnable
         ) { event ->
             when (event) {
-                is VideoRecordEvent.Finalize -> handleFinalizeEvent(context, cameraController, recordingLogicViewModel, event)
+                is VideoRecordEvent.Finalize -> handleFinalizeEvent(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel, event)
             }
         })
+        recordingLogicViewModel.recordingStart = true
     }
 
     recordingLogicViewModel.startRecording()
@@ -256,7 +308,7 @@ fun startRecording(context: Context, cameraController: LifecycleCameraController
 fun saveRecording(recordingLogicViewModel: RecordingLogicViewModel) {
     Log.d("Camera", "Save recording called")
     recordingLogicViewModel.requestSave()
-    recordingLogicViewModel.stopRecording()
+    stopRecording(recordingLogicViewModel)
 }
 
 fun stopRecording(recordingLogicViewModel: RecordingLogicViewModel) {

@@ -48,16 +48,6 @@ class RecordingLogicViewModel : ViewModel() {
     var isRecording: Boolean by mutableStateOf(false)
         private set
 
-
-    // VideoCapture property for handling recording
-    private var _videoCapture: VideoCapture<Recorder>? by mutableStateOf(null)
-        private set
-
-    // Getter for videoCapture
-    fun getVideoCapture(): VideoCapture<Recorder>? {
-        return _videoCapture
-    }
-
     // Recording start state
     var recordingStart: Boolean by mutableStateOf(false)
 
@@ -80,17 +70,4 @@ class RecordingLogicViewModel : ViewModel() {
         audioEnable = !audioEnable
     }
 
-    // Camera selector state (for front or back camera)
-    private var _cameraSelector: CameraSelector by mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA)
-        private set
-
-    // Getter for cameraSelector
-    fun getCameraSelector(): CameraSelector {
-        return _cameraSelector
-    }
-
-    // Setter for cameraSelector
-    fun setCameraSelector(newCameraSelector: CameraSelector) {
-        _cameraSelector = newCameraSelector
-    }
 }
