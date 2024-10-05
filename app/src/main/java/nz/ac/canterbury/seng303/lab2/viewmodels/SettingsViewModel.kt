@@ -1,5 +1,6 @@
 package nz.ac.canterbury.seng303.lab2.viewmodels
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -39,6 +40,7 @@ class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewMod
                 preferences[SettingsPreferencesKeys.VIDEO_QUALITY] = videoQuality
                 preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] = crashSensitivity
             }
+            Log.d("SettingsViewModel", "Saved settings: videoLength = $videoLength, videoQuality = $videoQuality, crashSensitivity = $crashSensitivity")
         }
     }
 }
