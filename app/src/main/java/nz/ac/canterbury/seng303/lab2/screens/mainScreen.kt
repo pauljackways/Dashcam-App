@@ -152,7 +152,13 @@ fun MainScreen(
                     }
                 } else if (isCameraInitialized && hasPermissions(context)) {
                     Button(
-                        onClick = { startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel) },
+                        onClick = {
+                            // Request notification permission (not required to start recording)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                Notification.requestPermissions(context as Activity)
+                            }
+                            startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
