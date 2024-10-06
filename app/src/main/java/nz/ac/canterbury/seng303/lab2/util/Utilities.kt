@@ -10,3 +10,13 @@ fun convertTimestampToReadableTime(timestamp: Long): String {
     calendar.timeInMillis = timestamp
     return dateFormat.format(calendar.time)
 }
+
+fun convertTimestampToVideoTitle(timestamp: Long): String {
+    val dateFormat = SimpleDateFormat("dd_MMMM_yyyy_HH_mm", Locale.getDefault())
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = timestamp
+    val seconds = calendar.get(Calendar.SECOND)
+    val milliseconds = calendar.get(Calendar.MILLISECOND)
+    val formattedDate = dateFormat.format(calendar.time)
+    return "${formattedDate}_${seconds}${milliseconds.toString().padStart(3, '0')}.mp4"
+}
