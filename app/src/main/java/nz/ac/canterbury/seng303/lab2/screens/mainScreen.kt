@@ -262,24 +262,41 @@ private fun requestPermissions(activity: Activity) {
     ActivityCompat.requestPermissions(activity, requiredPermissions, requestCodePermissions)
 }
 
-private fun handleFinalizeEvent(context: Context, previewView: PreviewView, videoCapture: MutableState<VideoCapture<Recorder>?>, lifecycleOwner: LifecycleOwner, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel, finalizeEvent: VideoRecordEvent.Finalize) {
+private fun handleFinalizeEvent(
+    context: Context,
+    previewView: PreviewView,
+    videoCapture: MutableState<VideoCapture<Recorder>?>,
+    lifecycleOwner: LifecycleOwner,
+    cameraController: LifecycleCameraController,
+    recordingLogicViewModel: RecordingLogicViewModel,
+    finalizeEvent: VideoRecordEvent.Finalize
+) {
     val uri = finalizeEvent.outputResults.outputUri
     Log.i("Camera", uri.toString())
+
     if (recordingLogicViewModel.saveRequested()) {
         if (uri != Uri.EMPTY) {
             val uriEncoded = URLEncoder.encode(
                 uri.toString(),
-                StandardCharsets.UTF_8.toString())
+                StandardCharsets.UTF_8.toString()
+            )
         }
-        // TODO: Figure out if starting the recording should be here, or if this should callback and have logic handle it
         startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
         recordingLogicViewModel.clearSaveRequest()
-    } else  {
-        // Delete
-        val contentResolver = context.contentResolver
-        contentResolver.delete(uri, null, null)
+    } else {
+        val file = File(uri.path!!)
+        if (file.exists()) {
+            if (file.delete()) {
+                Log.d("FileDeletion", "File deleted successfully.")
+            } else {
+                Log.e("FileDeletion", "Failed to delete the file.")
+            }
+        } else {
+            Log.e("FileDeletion", "File does not exist.")
+        }
     }
 }
+
 
 @SuppressLint("MissingPermission", "NewApi")
 fun startRecording(context: Context, previewView: PreviewView, videoCapture: MutableState<VideoCapture<Recorder>?>, lifecycleOwner: LifecycleOwner, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel) {
