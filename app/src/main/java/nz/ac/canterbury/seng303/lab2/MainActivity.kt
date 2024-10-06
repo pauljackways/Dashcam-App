@@ -1,5 +1,6 @@
 package nz.ac.canterbury.seng303.lab2
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -35,6 +37,7 @@ import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 import nz.ac.canterbury.seng303.lab2.util.AppLifecycleObserver
 import nz.ac.canterbury.seng303.lab2.util.Notification
+import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -76,5 +79,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        val serviceIntent = Intent(this, SpeedDetectionService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
     }
 }

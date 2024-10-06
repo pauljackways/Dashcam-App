@@ -44,6 +44,7 @@ import androidx.camera.video.*
 import androidx.core.util.Consumer
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -62,6 +63,8 @@ fun MainScreen(
     var isCameraInitialized by remember { mutableStateOf(false) }
     var previewView : PreviewView = remember { PreviewView(context) }
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
+
+    Notification.createDrivingDetectionNotificationChannel(LocalContext.current)
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
         try {

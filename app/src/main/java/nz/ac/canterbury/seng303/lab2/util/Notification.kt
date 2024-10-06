@@ -20,6 +20,9 @@ object Notification {
     private const val RECORDING_NOTIFICATION_ID = 1
     private const val DRIVING_NOTIFICATION_ID = 2
 
+    const val DRIVING_DETECTION_FOREGROUND_NOTIFICATION_ID = 3
+    const val DRIVING_DETECTION_FOREGROUND_CHANNEL_ID = "driving-detection-foreground-channel-id"
+
     private const val REQUEST_CODE_PERMISSIONS = 30369
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -145,5 +148,16 @@ object Notification {
     fun cancelDrivingNotification(context: Context) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(DRIVING_NOTIFICATION_ID)
+    }
+
+    fun createDrivingDetectionNotificationChannel(context: Context) {
+        val channel = NotificationChannel(
+            DRIVING_DETECTION_FOREGROUND_CHANNEL_ID,
+            "Speed Detection Service Channel",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 }
