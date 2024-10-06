@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 Scaffold(
                     topBar = {
+                        // Add your AppBar content here
                         TopAppBar(
                             title = { Text("303 a2") },
                             navigationIcon = {
@@ -73,4 +74,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
