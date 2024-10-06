@@ -26,12 +26,8 @@ import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 
 @Composable
 fun Settings(navController: NavController, viewModel: SettingsViewModel) {
-    // Collect state from the view model
-    val videoLength by viewModel.videoLength.collectAsState()
-    val videoQuality by viewModel.videoQuality.collectAsState()
-    val crashSensitivity by viewModel.crashSensitivity.collectAsState()
+    val settings by viewModel.settings.collectAsState()
 
-    // Remember coroutine scope to save settings on button click
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -44,15 +40,13 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
 
         // Video Length Slider
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Video Length: $videoLength seconds")
+            Text(text = "Video Length: ${settings.videoLength} seconds")
             Slider(
-                value = videoLength.toFloat(),  // Directly use the value from the ViewModel
+                value = settings.videoLength.toFloat(),
                 onValueChange = { newValue ->
                     coroutineScope.launch {
                         viewModel.saveSettings(
-                            videoLength = newValue.toInt(),
-                            videoQuality = videoQuality,
-                            crashSensitivity = crashSensitivity
+                            settings.copy(videoLength = newValue.toInt())
                         )
                     }
                 },
@@ -65,13 +59,11 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
             Text(text = "Video Quality")
             Row {
                 RadioButton(
-                    selected = videoQuality == "Low",
+                    selected = settings.videoQuality == "Low",
                     onClick = {
                         coroutineScope.launch {
                             viewModel.saveSettings(
-                                videoLength = videoLength,
-                                videoQuality = "Low",
-                                crashSensitivity = crashSensitivity
+                                settings.copy(videoQuality = "Low")
                             )
                         }
                     }
@@ -80,13 +72,11 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
             }
             Row {
                 RadioButton(
-                    selected = videoQuality == "Medium",
+                    selected = settings.videoQuality == "Medium",
                     onClick = {
                         coroutineScope.launch {
                             viewModel.saveSettings(
-                                videoLength = videoLength,
-                                videoQuality = "Medium",
-                                crashSensitivity = crashSensitivity
+                                settings.copy(videoQuality = "Medium")
                             )
                         }
                     }
@@ -95,13 +85,11 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
             }
             Row {
                 RadioButton(
-                    selected = videoQuality == "High",
+                    selected = settings.videoQuality == "High",
                     onClick = {
                         coroutineScope.launch {
                             viewModel.saveSettings(
-                                videoLength = videoLength,
-                                videoQuality = "High",
-                                crashSensitivity = crashSensitivity
+                                settings.copy(videoQuality = "High")
                             )
                         }
                     }
@@ -112,15 +100,13 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
 
         // Crash Detection Sensitivity Slider
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Crash Detection Sensitivity: ${(crashSensitivity * 100).toInt()}%")
+            Text(text = "Crash Detection Sensitivity: ${(settings.crashSensitivity * 100).toInt()}%")
             Slider(
-                value = crashSensitivity,
+                value = settings.crashSensitivity,
                 onValueChange = { newValue ->
                     coroutineScope.launch {
                         viewModel.saveSettings(
-                            videoLength = videoLength,
-                            videoQuality = videoQuality,
-                            crashSensitivity = newValue
+                            settings.copy(crashSensitivity = newValue)
                         )
                     }
                 },
@@ -135,9 +121,7 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
             onClick = {
                 coroutineScope.launch {
                     viewModel.saveSettings(
-                        videoLength,
-                        videoQuality,
-                        crashSensitivity
+                        settings
                     )
                     navController.navigateUp()
                 }
