@@ -12,14 +12,13 @@ class Accelerometer(context: Context, private val listener: AccelerometerListene
     private val accelerometer: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
 
     private val threshold = 0.5f
-    private val crashThreshold = -5.0f // Threshold for crash detection (adjust as needed)
+    private val crashThreshold = -5.0f
 
     // Store the last reported acceleration values
     private var lastX = 0f
     private var lastY = 0f
     private var lastZ = 0f
 
-    // Define a time interval for reporting in milliseconds
     private val reportingInterval = 100L
     private var lastReportedTime = System.currentTimeMillis()
 
