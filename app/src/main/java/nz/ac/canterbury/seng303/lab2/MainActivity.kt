@@ -1,6 +1,7 @@
 package nz.ac.canterbury.seng303.lab2
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -29,15 +30,19 @@ import androidx.navigation.compose.rememberNavController
 import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
+import nz.ac.canterbury.seng303.lab2.util.Accelerometer
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
 
+    private lateinit var accelerometer: Accelerometer
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        accelerometer = Accelerometer(this, this)
 
         setContent {
             Lab1Theme {
@@ -60,4 +65,23 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onAccelerationChanged(x: Float, y: Float, z: Float) {
+        System.out.println("Accelerometer: x: $x, y: $y, z: $z")
 }
+
+    override fun onCrashDetected() {
+        println("Crash detected!")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        accelerometer.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        accelerometer.stop()
+    }
+}
+
