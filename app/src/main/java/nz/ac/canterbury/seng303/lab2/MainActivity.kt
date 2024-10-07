@@ -42,23 +42,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Lab1Theme {
                 val navController = rememberNavController()
-                Scaffold(
-                    topBar = {
-                        // Add your AppBar content here
-                        TopAppBar(
-                            title = { Text("303 a2") },
-                            navigationIcon = {
-                                IconButton(onClick = { navController.navigate("Home") }) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                            }
-                        )
-                    }
-                ) {
-
+                Scaffold() {
                     Box(modifier = Modifier.padding(it)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
