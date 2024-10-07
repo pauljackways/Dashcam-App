@@ -23,6 +23,8 @@ import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
+import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +58,8 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("Settings") {
-                                Settings(navController)
+                                val settingsViewModel = koinViewModel<SettingsViewModel>()
+                                Settings(navController, settingsViewModel)
                             }
 
                         }
