@@ -20,19 +20,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import nz.ac.canterbury.seng303.lab2.models.AppSettings
+import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 
 @Composable
 fun Settings(navController: NavController, viewModel: SettingsViewModel) {
+    val context = LocalContext.current
+
     val settings by viewModel.settings.collectAsState()
 
     var tempVideoLength by remember { mutableStateOf(settings.videoLength) }
     var tempVideoQuality by remember { mutableStateOf(settings.videoQuality) }
     var tempCrashSensitivity by remember { mutableStateOf(settings.crashSensitivity) }
+
+    var displayBackgroundLocationButton by remember { mutableStateOf(false) }
 
     // synchronizes values for UI -- weird fetching thing
     LaunchedEffect(settings) {
@@ -100,6 +106,30 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 valueRange = 0f..1f
             )
         }
+
+        // Enable Driving Detection Button
+        Column(modifier = Modifier.fillMaxWidth()) {
+            if (!SpeedDetectionService.hasPreciseLocationPermission(LocalContext.current)
+                && !displayBackgroundLocationButton) {
+                Text("To enable driving detection please allow additional permissions:")
+                Button(onClick = {
+                    SpeedDetectionService.requestPreciseLocationPermission(context)
+                    displayBackgroundLocationButton = true
+                }) {
+                    Text("Allow permissions")
+                }
+            } else if (!SpeedDetectionService.hasBackgroundLocationPermission(LocalContext.current)
+                && displayBackgroundLocationButton) {
+                Text("To enable driving detection please allow background location permissions:")
+                Button(onClick = {
+                    SpeedDetectionService.requestBackgroundLocationPermission(context)
+                    displayBackgroundLocationButton = false
+                }) {
+                    Text("Allow background location permissions")
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         // Save Button

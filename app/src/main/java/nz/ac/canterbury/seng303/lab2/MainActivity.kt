@@ -1,9 +1,13 @@
 package nz.ac.canterbury.seng303.lab2
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -67,8 +71,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
 
-        val serviceIntent = Intent(this, SpeedDetectionService::class.java)
-        ContextCompat.startForegroundService(this, serviceIntent)
+    override fun onStart() {
+        super.onStart()
+        val intent = Intent(this, SpeedDetectionService::class.java)
+        stopService(intent)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        SpeedDetectionService.start(this)
     }
 }
