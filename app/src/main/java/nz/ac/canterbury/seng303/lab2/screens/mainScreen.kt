@@ -34,7 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import nz.ac.canterbury.seng303.lab2.util.convertTimestampToVideoTitle
 import nz.ac.canterbury.seng303.lab2.util.AppLifecycleObserver
-import nz.ac.canterbury.seng303.lab2.util.Notification
+import nz.ac.canterbury.seng303.lab2.util.NotificationHelper
 import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import java.io.File
 import androidx.camera.core.CameraSelector
@@ -44,10 +44,8 @@ import androidx.camera.video.*
 import androidx.core.util.Consumer
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.util.*
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -63,8 +61,6 @@ fun MainScreen(
     var isCameraInitialized by remember { mutableStateOf(false) }
     var previewView : PreviewView = remember { PreviewView(context) }
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
-
-    Notification.createDrivingDetectionNotificationChannel(LocalContext.current)
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
         try {
@@ -158,7 +154,7 @@ fun MainScreen(
                         onClick = {
                             // Request notification permission (not required to start recording)
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                Notification.requestPermissions(context as Activity)
+                                NotificationHelper.requestPermissions(context as Activity)
                             }
                             startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
                         },

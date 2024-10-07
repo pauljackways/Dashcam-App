@@ -1,6 +1,5 @@
 package nz.ac.canterbury.seng303.lab2.util
 
-import android.app.NotificationManager
 import android.content.Context
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -15,11 +14,11 @@ class AppLifecycleObserver(
         when (event) {
             Lifecycle.Event.ON_PAUSE -> {
                 if (recordingLogicViewModel.isRecording) {
-                    Notification.sendRecordingNotification(context)
+                    NotificationHelper.sendRecordingNotification(context)
                 }
             }
             Lifecycle.Event.ON_RESUME -> {
-                Notification.cancelRecordingNotification(context)
+                NotificationHelper.cancelRecordingNotification(context)
             }
             else -> {}
         }

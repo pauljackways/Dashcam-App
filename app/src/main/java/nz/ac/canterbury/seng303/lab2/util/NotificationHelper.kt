@@ -2,6 +2,7 @@ package nz.ac.canterbury.seng303.lab2.util
 
 import android.Manifest
 import android.app.Activity
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -16,12 +17,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import nz.ac.canterbury.seng303.lab2.MainActivity
 
-object Notification {
+object NotificationHelper {
     private const val RECORDING_NOTIFICATION_ID = 1
     private const val DRIVING_NOTIFICATION_ID = 2
 
     const val DRIVING_DETECTION_FOREGROUND_NOTIFICATION_ID = 3
-    const val DRIVING_DETECTION_FOREGROUND_CHANNEL_ID = "driving-detection-foreground-channel-id"
+    private const val DRIVING_DETECTION_FOREGROUND_CHANNEL_ID = "driving-detection-foreground-channel-id"
 
     private const val REQUEST_CODE_PERMISSIONS = 30369
 
@@ -88,8 +89,6 @@ object Notification {
             .setContentText("Tap here to open the app")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(pendingIntent)
-//            .setOngoing(true)
-        // TODO ongoing notifications requires a foreground service
 
         with(NotificationManagerCompat.from(context)) {
             notify(notificationId, builder.build())
@@ -101,7 +100,7 @@ object Notification {
         notificationManager.cancel(RECORDING_NOTIFICATION_ID)
     }
 
-    fun sendDrivingNotification(context: Context) {
+    fun sendDrivingNotification(context: Context, speed: String) {
         val channelId = "driving-detection-channel-id"
         val notificationId = DRIVING_NOTIFICATION_ID
 
@@ -132,13 +131,11 @@ object Notification {
         )
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_menu_delete)
+            .setSmallIcon(android.R.drawable.stat_sys_warning)
             .setContentTitle("Are you driving?")
-            .setContentText("We detected you may be driving without the dashcam. Tap here to open the app")
+            .setContentText("We detected you may be driving at $speed kph without the dashcam. Tap here to open the app.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
-//            .setOngoing(true)
-        // TODO ongoing notifications requires a foreground service
 
         with(NotificationManagerCompat.from(context)) {
             notify(notificationId, builder.build())
@@ -150,14 +147,24 @@ object Notification {
         notificationManager.cancel(DRIVING_NOTIFICATION_ID)
     }
 
-    fun createDrivingDetectionNotificationChannel(context: Context) {
+    fun createDrivingDetectionServiceNotificationChannel(context: Context) {
         val channel = NotificationChannel(
             DRIVING_DETECTION_FOREGROUND_CHANNEL_ID,
             "Speed Detection Service Channel",
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_MIN
         )
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
+    }
+
+    fun getDrivingDetectionServiceNotification(context: Context): Notification {
+        return NotificationCompat.Builder(context, DRIVING_DETECTION_FOREGROUND_CHANNEL_ID)
+            .setContentTitle("Dashcam Speed Detection")
+            .setContentText("Monitoring your speed...")
+            .setSmallIcon(android.R.drawable.ic_dialog_map)
+            .setOngoing(true)
+            .setSilent(true)
+            .build()
     }
 }
