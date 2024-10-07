@@ -4,6 +4,14 @@
 
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
 
+    <!-- Camera related permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Declare hardware features -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="true" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
