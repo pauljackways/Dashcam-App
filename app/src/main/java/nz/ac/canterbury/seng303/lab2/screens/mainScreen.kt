@@ -294,12 +294,11 @@ private fun handleFinalizeEvent(
     val files = VideoHelper.getAllVideosInFolder(context.filesDir, "mp4")
 
     if (recordingLogicViewModel.saveRequested()) {
-        val saveFile = File(File(context.filesDir, "test-out"), "out.mp4")
-        VideoHelper.stitchAllVideosInFolder(context, context.filesDir, "mp4", saveFile) { success ->
+        VideoHelper.stitchAllVideosInFolder(context, context.filesDir, "mp4") { success ->
             if (success) {
                 VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
             } else {
-                println("Stitching videos failed! not deleting video sections")
+                Log.e("Camera", "Stitching videos failed! not deleting video sections")
             }
         }
 
