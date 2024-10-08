@@ -83,4 +83,5 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.1.4")
     implementation("io.insert-koin:koin-androidx-compose:3.4.4")
 
+    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
 }
