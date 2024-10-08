@@ -1,92 +1,169 @@
 package nz.ac.canterbury.seng303.lab2.screens
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+
+import android.content.res.Configuration
+import android.util.Log
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import nz.ac.canterbury.seng303.lab2.models.AppSettings
+import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Settings(navController: NavController, viewModel: SettingsViewModel) {
+    val settings by viewModel.settings.collectAsState()
+
+    if (settings == null) {
+        Text("Loading settings...")
+        return
+    }
+
+    var tempVideoLength by rememberSaveable { mutableStateOf(settings!!.videoLength) }
+    var tempVideoQuality by rememberSaveable { mutableStateOf(settings!!.videoQuality) }
+    var tempCrashSensitivity by rememberSaveable { mutableStateOf(settings!!.crashSensitivity) }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isLandscape) Spacer(modifier = Modifier.weight(0.85f))
+                        else Spacer(modifier = Modifier.weight(0.75f))
+                        Text(text = "Settings")
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("Home") }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        val scrollState = rememberScrollState()
+
+        val modifier = if (isLandscape) {
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+                .verticalScroll(scrollState)
+        } else {
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        }
+
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Video Length Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Video Length: $tempVideoLength seconds")
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempVideoLength.toFloat(),
+                        onValueChange = { newValue ->
+                            tempVideoLength = newValue.toInt()
+                        },
+                        valueRange = 10f..60f,
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Video Quality Radio Buttons
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Video Quality")
+                RadioOption("Low", tempVideoQuality, onSelected = { tempVideoQuality = it })
+                RadioOption("Medium", tempVideoQuality, onSelected = { tempVideoQuality = it })
+                RadioOption("High", tempVideoQuality, onSelected = { tempVideoQuality = it })
+            }
+
+            // Crash Detection Sensitivity Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Crash Detection Sensitivity: ${(tempCrashSensitivity * 100).toInt()}%")
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempCrashSensitivity,
+                        onValueChange = { newValue ->
+                            tempCrashSensitivity = newValue
+                        },
+                        valueRange = 0f..1f,
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Save Button
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        viewModel.saveSettings(
+                            AppSettings(
+                                videoLength = tempVideoLength,
+                                videoQuality = tempVideoQuality,
+                                crashSensitivity = tempCrashSensitivity
+                            )
+                        )
+                        navController.navigateUp()
+                    }
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(text = "Save")
+            }
+        }
+    }
+}
 
 @Composable
-fun Settings(navController: NavController) {
-    var videoLength by remember { mutableStateOf(30f) }  // Video length in seconds
-    var videoQuality by remember { mutableStateOf("High") } // Video quality (Low, Medium, High)
-    var crashSensitivity by remember { mutableStateOf(0.5f) }  // Crash detection sensitivity (0 to 1)
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+fun RadioOption(
+    label: String,
+    selectedOption: String,
+    onSelected: (String) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 8.dp)
     ) {
-        Text(text = "Settings")
-
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Video Length: ${videoLength.toInt()} seconds")
-            Slider(
-                value = videoLength,
-                onValueChange = { videoLength = it },
-                valueRange = 10f..60f
-            )
-        }
-
-        // Video Quality Radio Buttons
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Video Quality")
-            Row {
-                RadioButton(
-                    selected = videoQuality == "Low",
-                    onClick = { videoQuality = "Low" }
-                )
-                Text(text = "Low", modifier = Modifier.padding(start = 8.dp))
-            }
-            Row {
-                RadioButton(
-                    selected = videoQuality == "Medium",
-                    onClick = { videoQuality = "Medium" }
-                )
-                Text(text = "Medium", modifier = Modifier.padding(start = 8.dp))
-            }
-            Row {
-                RadioButton(
-                    selected = videoQuality == "High",
-                    onClick = { videoQuality = "High" }
-                )
-                Text(text = "High", modifier = Modifier.padding(start = 8.dp))
-            }
-        }
-
-        // Crash Detection Sensitivity Slider
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Crash Detection Sensitivity: ${(crashSensitivity * 100).toInt()}%")
-            Slider(
-                value = crashSensitivity,
-                onValueChange = { crashSensitivity = it },
-                valueRange = 0f..1f
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Save Button
-        Button(
-            onClick = { /* Handle save action */ },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text(text = "Save")
-        }
+        RadioButton(
+            selected = selectedOption == label,
+            onClick = { onSelected(label) }
+        )
+        Text(text = label, modifier = Modifier.padding(start = 4.dp))
     }
 }
