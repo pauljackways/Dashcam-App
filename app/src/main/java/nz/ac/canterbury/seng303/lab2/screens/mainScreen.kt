@@ -49,6 +49,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import android.os.Handler
 import android.os.Looper
+import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 
 @Composable
 fun MainScreen(
@@ -290,15 +291,22 @@ private fun handleFinalizeEvent(
         )
     }
 
+    val files = VideoHelper.getAllVideosInFolder(context.filesDir, "mp4")
+
     if (recordingLogicViewModel.saveRequested()) {
-        //TODO: merge and save all in folder to gallery, then delete all files in local folder (check for success first?)
+        val saveFile = File(File(context.filesDir, "test-out"), "out.mp4")
+        VideoHelper.stitchAllVideosInFolder(context, context.filesDir, "mp4", saveFile) { success ->
+            if (success) {
+                VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
+            } else {
+                println("Stitching videos failed! not deleting video sections")
+            }
+        }
+
         startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
         recordingLogicViewModel.clearSaveRequest()
     } else {
-        val directory: File = context.filesDir
-        val files = directory.listFiles()
-        val filesList = files?.toList() ?: emptyList()
-        val mediaFiles = filesList.filter { it.name.endsWith(".mp4") }.sortedByDescending { it.lastModified() }
+        val mediaFiles = files.sortedByDescending { it.lastModified() }
         for (i in 2 until mediaFiles.size) {
             Log.i("camera", "Deleting file: ${mediaFiles[i].name}")
             mediaFiles[i].delete()
