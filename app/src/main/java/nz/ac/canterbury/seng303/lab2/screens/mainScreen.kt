@@ -47,6 +47,8 @@ import java.util.*
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import android.os.Handler
+import android.os.Looper
 
 @Composable
 fun MainScreen(
@@ -262,6 +264,13 @@ private fun requestPermissions(activity: Activity) {
     ActivityCompat.requestPermissions(activity, requiredPermissions, requestCodePermissions)
 }
 
+
+fun isFolderEmpty(context: Context): Boolean {
+    val directory: File = context.filesDir
+    val files = directory.listFiles()
+    return files == null || files.isEmpty()
+}
+
 private fun handleFinalizeEvent(
     context: Context,
     previewView: PreviewView,
@@ -274,25 +283,36 @@ private fun handleFinalizeEvent(
     val uri = finalizeEvent.outputResults.outputUri
     Log.i("Camera", uri.toString())
 
+    if (uri != Uri.EMPTY) {
+        val uriEncoded = URLEncoder.encode(
+            uri.toString(),
+            StandardCharsets.UTF_8.toString()
+        )
+    }
+
     if (recordingLogicViewModel.saveRequested()) {
+        //TODO: merge and save all in folder to gallery, then delete all files in local folder (check for success first?)
+        startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
+        recordingLogicViewModel.clearSaveRequest()
+    } else {
+        val directory: File = context.filesDir
+        val files = directory.listFiles()
+        val filesList = files?.toList() ?: emptyList()
+        val mediaFiles = filesList.filter { it.name.endsWith(".mp4") }.sortedByDescending { it.lastModified() }
+        for (i in 2 until mediaFiles.size) {
+            Log.i("camera", "Deleting file: ${mediaFiles[i].name}")
+            mediaFiles[i].delete()
+        }
+
         if (uri != Uri.EMPTY) {
             val uriEncoded = URLEncoder.encode(
                 uri.toString(),
                 StandardCharsets.UTF_8.toString()
             )
         }
-        startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
-        recordingLogicViewModel.clearSaveRequest()
-    } else {
-        val file = File(uri.path!!)
-        if (file.exists()) {
-            if (file.delete()) {
-                Log.d("FileDeletion", "File deleted successfully.")
-            } else {
-                Log.e("FileDeletion", "Failed to delete the file.")
-            }
-        } else {
-            Log.e("FileDeletion", "File does not exist.")
+        if (recordingLogicViewModel.autoSaveRequested()) {
+            startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
+            recordingLogicViewModel.clearAutoSaveRequest()
         }
     }
 }
@@ -320,7 +340,30 @@ fun startRecording(context: Context, previewView: PreviewView, videoCapture: Mut
     }
 
     recordingLogicViewModel.startRecording()
+    startRecordingTimer(recordingLogicViewModel)
 }
+
+
+
+private var handler: Handler? = null
+private var runnable: Runnable? = null
+
+fun startRecordingTimer(recordingLogicViewModel: RecordingLogicViewModel) {
+    handler = Handler(Looper.getMainLooper())
+    runnable = object : Runnable {
+        override fun run() {
+            recordingLogicViewModel.autoSave()
+            handler?.postDelayed(this, recordingLogicViewModel.intervalMillis)
+        }
+    }
+    handler?.postDelayed(runnable!!, recordingLogicViewModel.intervalMillis)
+}
+
+fun stopRecordingTimer() {
+    handler?.removeCallbacks(runnable!!)
+    handler = null
+}
+
 
 fun saveRecording(recordingLogicViewModel: RecordingLogicViewModel) {
     Log.d("Camera", "Save recording called")
@@ -331,6 +374,7 @@ fun saveRecording(recordingLogicViewModel: RecordingLogicViewModel) {
 fun stopRecording(recordingLogicViewModel: RecordingLogicViewModel) {
     Log.d("Camera", "Stop recording called")
     recordingLogicViewModel.stopRecording()
+    stopRecordingTimer()
 }
 
 @SuppressLint("NewApi")

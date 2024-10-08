@@ -11,6 +11,8 @@ import androidx.lifecycle.ViewModel
 
 class RecordingLogicViewModel : ViewModel() {
 
+    val intervalMillis: Long = 10000; // TODO: add this to settings
+
     var toggle: Boolean by mutableStateOf(false)
         private set
 
@@ -22,6 +24,9 @@ class RecordingLogicViewModel : ViewModel() {
         private set
 
     private var saveRequested = false
+
+    private var autoSaveRequested = false
+
 
     // Getter and Setter for recording
     fun getRecording(): Recording? {
@@ -36,12 +41,20 @@ class RecordingLogicViewModel : ViewModel() {
         return saveRequested
     }
 
+    fun autoSaveRequested(): Boolean {
+        return autoSaveRequested
+    }
+
     fun requestSave() {
         saveRequested = true
     }
 
     fun clearSaveRequest() {
         saveRequested = false
+    }
+
+    fun clearAutoSaveRequest() {
+        autoSaveRequested = false
     }
 
     // Mutable state for recording status
@@ -60,6 +73,11 @@ class RecordingLogicViewModel : ViewModel() {
         _recording?.stop()
         recordingStart = false
         isRecording = false
+    }
+
+    fun autoSave() {
+        autoSaveRequested = true
+        _recording?.stop()
     }
 
     // Audio enable state
