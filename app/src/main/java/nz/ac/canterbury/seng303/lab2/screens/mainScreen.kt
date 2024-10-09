@@ -49,7 +49,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.DefaultLifecycleObserver
+import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 
 @Composable
@@ -106,13 +108,13 @@ fun MainScreen(
                         context.startActivity(intent)
                     }
                 ) {
-                    Text(text = "Open Gallery")
+                    Text(text = stringResource(R.string.open_gallery_button))
                 }
 
                 Button(
                     onClick = { navController.navigate("settings") }
                 ) {
-                    Text(text = "Settings")
+                    Text(text = stringResource(R.string.settings_button))
                 }
             }
 
@@ -133,7 +135,7 @@ fun MainScreen(
                             modifier = Modifier.size(100.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text(text = "Capture")
+                            Text(text = stringResource(R.string.capture_button))
                         }
 
                         Button(
@@ -142,7 +144,7 @@ fun MainScreen(
                                 .fillMaxWidth()
                                 .padding(16.dp)
                         ) {
-                            Text(text = "Stop Recording")
+                            Text(text = stringResource(R.string.stop_recording_button))
                         }
                     }
                 } else if (isCameraInitialized && hasPermissions(context)) {
@@ -152,13 +154,14 @@ fun MainScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        Text(text = "Start Recording")
+                        Text(text = stringResource(R.string.start_recording_button))
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun InitCamera(
@@ -214,7 +217,7 @@ fun NoCameraPermissions(context: Context, onPermissionChange: () -> Unit) {
             onPermissionChange()
         }
     ) {
-        Text(text = "Start camera")
+        Text(text = stringResource(R.string.start_camera_button))
     }
 }
 
