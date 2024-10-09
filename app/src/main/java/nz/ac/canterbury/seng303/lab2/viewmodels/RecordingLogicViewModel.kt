@@ -90,6 +90,10 @@ class RecordingLogicViewModel : ViewModel() {
     var audioEnable: Boolean by mutableStateOf(false)
         private set
 
+    // didn't want to delete toggle just in case but using this for now
+    fun setAudioEnable(enable: Boolean) {
+        audioEnable = enable
+    }
     fun toggleAudioEnable() {
         audioEnable = !audioEnable
     }

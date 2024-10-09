@@ -19,11 +19,12 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.models.AppSettings
+import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Settings(navController: NavController, viewModel: SettingsViewModel) {
+fun Settings(navController: NavController, viewModel: SettingsViewModel, recordingLogicViewModel: RecordingLogicViewModel) {
     val settings by viewModel.settings.collectAsState()
 
     if (settings == null) {
@@ -168,6 +169,8 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                                 audioEnable = tempAudioEnable
                             )
                         )
+
+                        recordingLogicViewModel.setAudioEnable(tempAudioEnable)
                         navController.navigateUp()
                     }
                 },
