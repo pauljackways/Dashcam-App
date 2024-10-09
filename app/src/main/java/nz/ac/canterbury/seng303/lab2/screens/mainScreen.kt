@@ -49,6 +49,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import android.os.Handler
 import android.os.Looper
+import androidx.lifecycle.DefaultLifecycleObserver
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 
 @Composable
@@ -75,6 +76,27 @@ fun MainScreen(
         } catch (e: Exception) {
             Log.e("Camera", "Error initializing camera: ${e.message}")
             // Handle the error, show a toast or update the UI accordingly
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val lifecycleObserver = object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                // Only stop recording on destroy
+                if (recordingLogicViewModel.isRecording) {
+                    recordingLogicViewModel.stopRecording()
+                    Log.i("Camera", "Camera stopped due to onDestroy.")
+                }
+            }
+
+            override fun onPause(owner: LifecycleOwner) {
+                recordingLogicViewModel.stopRecording()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(lifecycleObserver)
         }
     }
 
@@ -306,7 +328,7 @@ private fun handleFinalizeEvent(
         recordingLogicViewModel.clearSaveRequest()
     } else {
         val mediaFiles = files.sortedByDescending { it.lastModified() }
-        for (i in 2 until mediaFiles.size) {
+        for (i in 3 until mediaFiles.size) {
             Log.i("camera", "Deleting file: ${mediaFiles[i].name}")
             mediaFiles[i].delete()
         }
