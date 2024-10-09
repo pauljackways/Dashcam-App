@@ -1,5 +1,6 @@
 package nz.ac.canterbury.seng303.lab2.datastore
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -9,4 +10,5 @@ object SettingsPreferencesKeys {
     val VIDEO_LENGTH = intPreferencesKey("video_length")
     val CRASH_SENSITIVITY = floatPreferencesKey("crash_sensitivity")
     val AUTO_SAVE_INTERVAL = longPreferencesKey("auto_save_interval")
+    val AUDIO_ENABLE = booleanPreferencesKey("audio_enable")
 }

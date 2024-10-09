@@ -21,7 +21,8 @@ class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewMod
             AppSettings(
                 videoLength = preferences[SettingsPreferencesKeys.VIDEO_LENGTH] ?: 30,
                 crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 0.5f,
-                autoSaveIntervalMillis = preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] ?: 10000L
+                autoSaveIntervalMillis = preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] ?: 10000L,
+                audioEnable = preferences[SettingsPreferencesKeys.AUDIO_ENABLE] ?: false
             )
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
@@ -32,6 +33,7 @@ class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewMod
                 preferences[SettingsPreferencesKeys.VIDEO_LENGTH] = newSettings.videoLength
                 preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] = newSettings.crashSensitivity
                 preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] = newSettings.autoSaveIntervalMillis
+                preferences[SettingsPreferencesKeys.AUDIO_ENABLE] = newSettings.audioEnable
             }
             Log.d("SettingsViewModel", "Saved settings: $newSettings")
         }

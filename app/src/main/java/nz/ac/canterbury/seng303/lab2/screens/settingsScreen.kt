@@ -34,6 +34,7 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
     var tempVideoLength by rememberSaveable { mutableStateOf(settings!!.videoLength) }
     var tempCrashSensitivity by rememberSaveable { mutableStateOf(settings!!.crashSensitivity) }
     var tempAutoSaveIntervalMillis by rememberSaveable { mutableStateOf(settings!!.autoSaveIntervalMillis) }
+    var tempAudioEnable by rememberSaveable { mutableStateOf(settings!!.audioEnable) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -140,6 +141,19 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 }
             }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = stringResource(R.string.audio_enable))
+                Spacer(modifier = Modifier.weight(1f))
+                Switch(
+                    checked = tempAudioEnable,
+                    onCheckedChange = { tempAudioEnable = it },
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             // Save Button
@@ -150,7 +164,8 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                             AppSettings(
                                 videoLength = tempVideoLength,
                                 crashSensitivity = tempCrashSensitivity,
-                                autoSaveIntervalMillis = tempAutoSaveIntervalMillis
+                                autoSaveIntervalMillis = tempAutoSaveIntervalMillis,
+                                audioEnable = tempAudioEnable
                             )
                         )
                         navController.navigateUp()
