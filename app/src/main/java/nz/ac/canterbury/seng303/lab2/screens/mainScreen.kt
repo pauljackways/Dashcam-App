@@ -4,10 +4,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
-import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.Recording
@@ -16,7 +15,6 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -43,12 +41,29 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.util.*
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 
 @Composable
@@ -62,6 +77,18 @@ fun MainScreen(
     var isCameraInitialized by remember { mutableStateOf(false) }
     var previewView : PreviewView = remember { PreviewView(context) }
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
+
+    val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+
+    val infiniteTransition = rememberInfiniteTransition(label = "Infinite recording button rotation")
+    val buttonRotationAnimation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 5000, easing = LinearEasing), // 5 seconds per rotation
+            repeatMode = RepeatMode.Restart
+        ), label = "Infinite recording button rotation"
+    )
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
         try {
@@ -78,82 +105,204 @@ fun MainScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        InitCamera(context, previewView, cameraController, lifecycleOwner, recordingLogicViewModel) {
-            isCameraInitialized = true
+    InitCamera(context, previewView, cameraController, lifecycleOwner, recordingLogicViewModel) {
+        isCameraInitialized = true
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // TODO style and make gallery and settings buttons work
+        Button(
+            onClick = { /* TODO */ },
+            modifier = Modifier
+                .align(if (isPortrait) Alignment.TopStart else Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
+            Text("Settings")
+        }
+        Button(
+            onClick = { /* TODO */ },
+            modifier = Modifier
+                .align(if (isPortrait) Alignment.TopEnd else Alignment.TopStart)
+                .padding(16.dp)
+        ) {
+            Text("Gallery")
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+        if (isCameraInitialized && hasPermissions(context)) {
+            Box(
+                modifier = Modifier
+                    .align(if (isPortrait) Alignment.BottomCenter else Alignment.CenterEnd)
+                    .padding(vertical = 16.dp, horizontal = (21 + 16 + 14).dp)
+                    .offset(y = 21.dp)
             ) {
-                Button(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                        context.startActivity(intent)
+                Column(
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column {
+                        Box() {
+                            fun buttonClicked() {
+                                if (recordingLogicViewModel.isRecording) {
+                                    stopRecording(recordingLogicViewModel)
+                                } else {
+                                    startRecording(
+                                        context, previewView, videoCapture, lifecycleOwner,
+                                        cameraController, recordingLogicViewModel
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = { buttonClicked() },
+                                shape = CircleShape,
+                                modifier = Modifier.size(80.dp).align(Alignment.Center),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            ) {}
+                            if (!recordingLogicViewModel.isRecording) {
+                                Button(
+                                    onClick = { buttonClicked() },
+                                    shape = CircleShape,
+                                    modifier = Modifier.size(30.dp).align(Alignment.Center),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                                ) {}
+                            } else {
+                                Button(
+                                    onClick = { buttonClicked() },
+                                    shape = RoundedCornerShape(20),
+                                    modifier = Modifier.size(30.dp).align(Alignment.Center)
+                                        .graphicsLayer(rotationZ = buttonRotationAnimation),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                                ) {}
+                            }
+                        }
                     }
-                ) {
-                    Text(text = "Open Gallery")
-                }
-
-                Button(
-                    onClick = { navController.navigate("settings") }
-                ) {
-                    Text(text = "Settings")
+                    Column(
+                        modifier = Modifier.height(42.dp)
+                    ) {
+                        val textStyle = TextStyle(
+                            fontSize = 24.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = Offset(3f, 3f),
+                                blurRadius = 10f
+                            ),
+                        )
+                        if (!recordingLogicViewModel.isRecording) {
+                            Text(
+                                style = textStyle,
+                                text = "Start",
+                            )
+                        } else {
+                            Text(
+                                style = textStyle,
+                                text = "Cancel",
+                            )
+                        }
+                    }
                 }
             }
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                if (recordingLogicViewModel.isRecording) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Button(
-                            onClick = {
-                                saveRecording(recordingLogicViewModel)
-                            },
-                            modifier = Modifier.size(100.dp),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Text(text = "Capture")
-                        }
-
-                        Button(
-                            onClick = { stopRecording(recordingLogicViewModel) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(text = "Stop Recording")
-                        }
-                    }
-                } else if (isCameraInitialized && hasPermissions(context)) {
-                    Button(
-                        onClick = { startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(text = "Start Recording")
-                    }
+            if (recordingLogicViewModel.isRecording) {
+                Button(
+                    onClick = { saveRecording(recordingLogicViewModel) },
+                    modifier = Modifier.align(Alignment.Center),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.hsl(
+                            44f,
+                            1f,
+                            0.65f
+                        )
+                    ),
+                    shape = RoundedCornerShape(12),
+                ) {
+                    Text(
+                        text = "CAPTURE",
+                        modifier = Modifier.padding(6.dp),
+                        style = TextStyle(
+                            letterSpacing = 0.1.em,
+                            fontSize = 48.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    )
                 }
             }
         }
     }
+
+//    Box(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(16.dp),
+//            verticalArrangement = Arrangement.SpaceBetween,
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceEvenly
+//            ) {
+//                Button(
+//                    onClick = {
+//                        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+//                        context.startActivity(intent)
+//                    }
+//                ) {
+//                    Text(text = "Open Gallery")
+//                }
+//
+//                Button(
+//                    onClick = { navController.navigate("settings") }
+//                ) {
+//                    Text(text = "Settings")
+//                }
+//            }
+//
+//            Box(
+//                modifier = Modifier.fillMaxSize(),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                if (recordingLogicViewModel.isRecording) {
+//                    Column(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        verticalArrangement = Arrangement.Center,
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Button(
+//                            onClick = {
+//                                saveRecording(recordingLogicViewModel)
+//                            },
+//                            modifier = Modifier.size(100.dp),
+//                            shape = MaterialTheme.shapes.medium
+//                        ) {
+//                            Text(text = "Capture")
+//                        }
+//
+//                        Button(
+//                            onClick = { stopRecording(recordingLogicViewModel) },
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(16.dp)
+//                        ) {
+//                            Text(text = "Stop Recording")
+//                        }
+//                    }
+//                } else if (isCameraInitialized && hasPermissions(context)) {
+//                    Button(
+//                        onClick = { startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel) },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(16.dp)
+//                    ) {
+//                        Text(text = "Start Recording")
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 @Composable
