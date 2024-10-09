@@ -11,7 +11,8 @@ import androidx.lifecycle.ViewModel
 
 class RecordingLogicViewModel : ViewModel() {
 
-    val intervalMillis: Long = 10000; // TODO: add this to settings
+    var intervalMillis: Long by mutableStateOf(10000) // 10 seconds
+        private set
 
     var toggle: Boolean by mutableStateOf(false)
         private set

@@ -30,8 +30,8 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
     }
 
     var tempVideoLength by rememberSaveable { mutableStateOf(settings!!.videoLength) }
-    var tempVideoQuality by rememberSaveable { mutableStateOf(settings!!.videoQuality) }
     var tempCrashSensitivity by rememberSaveable { mutableStateOf(settings!!.crashSensitivity) }
+    var tempAutoSaveIntervalMillis by rememberSaveable { mutableStateOf(settings!!.autoSaveIntervalMillis) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -100,14 +100,6 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 }
             }
 
-            // Video Quality Radio Buttons
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Video Quality")
-                RadioOption("Low", tempVideoQuality, onSelected = { tempVideoQuality = it })
-                RadioOption("Medium", tempVideoQuality, onSelected = { tempVideoQuality = it })
-                RadioOption("High", tempVideoQuality, onSelected = { tempVideoQuality = it })
-            }
-
             // Crash Detection Sensitivity Slider
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(text = "Crash Detection Sensitivity: ${(tempCrashSensitivity * 100).toInt()}%")
@@ -126,6 +118,24 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 }
             }
 
+            // Auto Save Interval Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Auto Save Interval: ${tempAutoSaveIntervalMillis / 1000} seconds")
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempAutoSaveIntervalMillis.toFloat(),
+                        onValueChange = { newValue ->
+                            tempAutoSaveIntervalMillis = newValue.toLong()
+                        },
+                        valueRange = 10000f..60000f, // Between 10s and 60s
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             // Save Button
@@ -135,8 +145,8 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                         viewModel.saveSettings(
                             AppSettings(
                                 videoLength = tempVideoLength,
-                                videoQuality = tempVideoQuality,
-                                crashSensitivity = tempCrashSensitivity
+                                crashSensitivity = tempCrashSensitivity,
+                                autoSaveIntervalMillis = tempAutoSaveIntervalMillis
                             )
                         )
                         navController.navigateUp()
@@ -147,23 +157,5 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 Text(text = "Save")
             }
         }
-    }
-}
-
-@Composable
-fun RadioOption(
-    label: String,
-    selectedOption: String,
-    onSelected: (String) -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(top = 8.dp)
-    ) {
-        RadioButton(
-            selected = selectedOption == label,
-            onClick = { onSelected(label) }
-        )
-        Text(text = label, modifier = Modifier.padding(start = 4.dp))
     }
 }

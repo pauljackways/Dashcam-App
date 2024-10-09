@@ -20,8 +20,8 @@ class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewMod
         .map { preferences ->
             AppSettings(
                 videoLength = preferences[SettingsPreferencesKeys.VIDEO_LENGTH] ?: 30,
-                videoQuality = preferences[SettingsPreferencesKeys.VIDEO_QUALITY] ?: "High",
-                crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 0.5f
+                crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 0.5f,
+                autoSaveIntervalMillis = preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] ?: 10000L
             )
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
@@ -30,8 +30,8 @@ class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewMod
         viewModelScope.launch {
             dataStore.edit { preferences ->
                 preferences[SettingsPreferencesKeys.VIDEO_LENGTH] = newSettings.videoLength
-                preferences[SettingsPreferencesKeys.VIDEO_QUALITY] = newSettings.videoQuality
                 preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] = newSettings.crashSensitivity
+                preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] = newSettings.autoSaveIntervalMillis
             }
             Log.d("SettingsViewModel", "Saved settings: $newSettings")
         }
