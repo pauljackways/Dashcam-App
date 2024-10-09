@@ -53,11 +53,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.DefaultLifecycleObserver
 import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MainScreen(
     navController: NavController,
-    recordingLogicViewModel: RecordingLogicViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -65,6 +65,7 @@ fun MainScreen(
     var isCameraInitialized by remember { mutableStateOf(false) }
     var previewView : PreviewView = remember { PreviewView(context) }
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
+    val recordingLogicViewModel: RecordingLogicViewModel = koinViewModel()
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
         VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")

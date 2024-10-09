@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 
 class RecordingLogicViewModel : ViewModel() {
 
-    var intervalMillis: Long by mutableStateOf(30000) // TODO: add this to settings
+    var intervalMillis: Long by mutableStateOf(30000)
         private set
 
     var toggle: Boolean by mutableStateOf(false)
@@ -91,7 +91,7 @@ class RecordingLogicViewModel : ViewModel() {
         private set
 
     // didn't want to delete toggle just in case but using this for now
-    fun setAudioEnable(enable: Boolean) {
+    fun updateAudioEnable(enable: Boolean) {
         audioEnable = enable
     }
     fun toggleAudioEnable() {

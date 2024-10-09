@@ -21,11 +21,15 @@ import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.models.AppSettings
 import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Settings(navController: NavController, viewModel: SettingsViewModel, recordingLogicViewModel: RecordingLogicViewModel) {
-    val settings by viewModel.settings.collectAsState()
+fun Settings(navController: NavController) {
+    val settingsViewModel: SettingsViewModel = koinViewModel()
+    val recordingLogicViewModel: RecordingLogicViewModel = koinViewModel()
+    
+    val settings by settingsViewModel.settings.collectAsState()
 
     if (settings == null) {
         Text(text = stringResource(R.string.loading_settings))
@@ -41,6 +45,8 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel, recordi
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+
 
     Scaffold(
         topBar = {
@@ -161,7 +167,7 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel, recordi
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        viewModel.saveSettings(
+                        settingsViewModel.saveSettings(
                             AppSettings(
                                 videoLength = tempVideoLength,
                                 crashSensitivity = tempCrashSensitivity,
@@ -170,7 +176,7 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel, recordi
                             )
                         )
 
-                        recordingLogicViewModel.setAudioEnable(tempAudioEnable)
+                        recordingLogicViewModel.updateAudioEnable(tempAudioEnable)
                         navController.navigateUp()
                     }
                 },
