@@ -49,6 +49,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import android.os.Handler
 import android.os.Looper
+import androidx.lifecycle.DefaultLifecycleObserver
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 
 @Composable
@@ -64,6 +65,9 @@ fun MainScreen(
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
+        VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
+        recordingLogicViewModel.setPermissions(hasPermissions(context))
+        recordingLogicViewModel.toggleRender()
         try {
             lifecycleOwner.lifecycleScope.launch {
                 videoCapture.value = context.createVideoCaptureUseCase(
@@ -165,21 +169,20 @@ fun InitCamera(
     recordingLogicViewModel: RecordingLogicViewModel,
     onCameraInitialized: () -> Unit
 ) {
-    var hasPermissions by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (hasPermissions) {
+        if (recordingLogicViewModel.hasPermissions()) {
             CameraPreview(context, previewView, cameraController, lifecycleOwner) {
                 onCameraInitialized()
             }
         } else {
             NoCameraPermissions(context) {
                 // Callback to update permissions
-                hasPermissions = hasPermissions(context)
+                recordingLogicViewModel.setPermissions(hasPermissions(context))
                 recordingLogicViewModel.toggleRender()
             }
         }
@@ -306,7 +309,7 @@ private fun handleFinalizeEvent(
         recordingLogicViewModel.clearSaveRequest()
     } else {
         val mediaFiles = files.sortedByDescending { it.lastModified() }
-        for (i in 2 until mediaFiles.size) {
+        for (i in 3 until mediaFiles.size) {
             Log.i("camera", "Deleting file: ${mediaFiles[i].name}")
             mediaFiles[i].delete()
         }
