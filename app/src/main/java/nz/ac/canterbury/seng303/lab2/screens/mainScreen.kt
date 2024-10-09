@@ -65,6 +65,9 @@ fun MainScreen(
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
+        VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
+        recordingLogicViewModel.setPermissions(hasPermissions(context))
+        recordingLogicViewModel.toggleRender()
         try {
             lifecycleOwner.lifecycleScope.launch {
                 videoCapture.value = context.createVideoCaptureUseCase(
@@ -76,27 +79,6 @@ fun MainScreen(
         } catch (e: Exception) {
             Log.e("Camera", "Error initializing camera: ${e.message}")
             // Handle the error, show a toast or update the UI accordingly
-        }
-    }
-
-    DisposableEffect(Unit) {
-        val lifecycleObserver = object : DefaultLifecycleObserver {
-            override fun onDestroy(owner: LifecycleOwner) {
-                // Only stop recording on destroy
-                if (recordingLogicViewModel.isRecording) {
-                    recordingLogicViewModel.stopRecording()
-                    Log.i("Camera", "Camera stopped due to onDestroy.")
-                }
-            }
-
-            override fun onPause(owner: LifecycleOwner) {
-                recordingLogicViewModel.stopRecording()
-            }
-        }
-
-        lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(lifecycleObserver)
         }
     }
 
@@ -187,21 +169,20 @@ fun InitCamera(
     recordingLogicViewModel: RecordingLogicViewModel,
     onCameraInitialized: () -> Unit
 ) {
-    var hasPermissions by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (hasPermissions) {
+        if (recordingLogicViewModel.hasPermissions()) {
             CameraPreview(context, previewView, cameraController, lifecycleOwner) {
                 onCameraInitialized()
             }
         } else {
             NoCameraPermissions(context) {
                 // Callback to update permissions
-                hasPermissions = hasPermissions(context)
+                recordingLogicViewModel.setPermissions(hasPermissions(context))
                 recordingLogicViewModel.toggleRender()
             }
         }
