@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.video.FileOutputOptions
@@ -49,6 +50,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.DefaultLifecycleObserver
 import nz.ac.canterbury.seng303.lab2.R
@@ -279,6 +282,7 @@ fun isFolderEmpty(context: Context): Boolean {
     return files == null || files.isEmpty()
 }
 
+@SuppressLint("NewApi")
 private fun handleFinalizeEvent(
     context: Context,
     previewView: PreviewView,
@@ -304,6 +308,9 @@ private fun handleFinalizeEvent(
         VideoHelper.stitchAllVideosInFolder(context, context.filesDir, "mp4") { success ->
             if (success) {
                 VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
+                context.mainExecutor.execute {
+                    Toast.makeText(context, "Video Captured!", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Log.e("Camera", "Stitching videos failed! not deleting video sections")
             }
