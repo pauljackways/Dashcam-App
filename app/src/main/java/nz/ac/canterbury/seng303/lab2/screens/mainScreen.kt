@@ -72,6 +72,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.res.stringResource
 import nz.ac.canterbury.seng303.lab2.R
 import org.koin.androidx.compose.koinViewModel
+import nz.ac.canterbury.seng303.lab2.util.Accelerometer
+import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
+
 
 @Composable
 fun MainScreen(
@@ -84,6 +87,7 @@ fun MainScreen(
     var previewView : PreviewView = remember { PreviewView(context) }
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
     val recordingLogicViewModel: RecordingLogicViewModel = koinViewModel()
+    val settingsViewModel: SettingsViewModel = koinViewModel()
 
     val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
 
@@ -98,6 +102,19 @@ fun MainScreen(
     )
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
+        val accelerometerListener = object : Accelerometer.AccelerometerListener {
+            override fun onAccelerationChanged(x: Float, y: Float, z: Float) {
+                Log.d("Accelerometer", "Acceleration changed: x = $x, y = $y, z = $z")
+            }
+
+            override fun onCrashDetected() {
+                saveRecording(recordingLogicViewModel)
+            }
+        }
+
+        val accelerometer = Accelerometer(context, accelerometerListener, settingsViewModel)
+        accelerometer.start()
+
         VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
         recordingLogicViewModel.setPermissions(hasPermissions(context))
         recordingLogicViewModel.toggleRender()

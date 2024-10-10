@@ -36,14 +36,11 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.androidx.compose.viewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
-    private lateinit var accelerometer: Accelerometer
+class MainActivity : ComponentActivity(){
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        accelerometer = Accelerometer(this, this)
 
         setContent {
             Lab1Theme {
@@ -68,24 +65,6 @@ class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
                 }
             }
         }
-    }
-
-    override fun onAccelerationChanged(x: Float, y: Float, z: Float) {
-        System.out.println("Accelerometer: x: $x, y: $y, z: $z")
-}
-
-    override fun onCrashDetected() {
-        println("Crash detected!")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        accelerometer.start()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        accelerometer.stop()
     }
 
     override fun onStart() {

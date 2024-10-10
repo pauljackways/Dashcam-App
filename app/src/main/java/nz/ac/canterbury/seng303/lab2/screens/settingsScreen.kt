@@ -117,9 +117,13 @@ fun Settings(navController: NavController) {
                 }
             }
 
-            // Crash Detection Sensitivity Slider
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = stringResource(R.string.crash_detection_sensitivity) + ": ${(tempCrashSensitivity * 100).toInt()}%")
+                val sensitivityPercentage = ((tempCrashSensitivity - 5) / (20 - 5)) * 100
+
+                Text(
+                    text = stringResource(R.string.crash_detection_sensitivity) + ": ${sensitivityPercentage.toInt()}%"
+                )
+
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.CenterStart
@@ -129,7 +133,7 @@ fun Settings(navController: NavController) {
                         onValueChange = { newValue ->
                             tempCrashSensitivity = newValue
                         },
-                        valueRange = 0f..1f,
+                        valueRange = 5f..20f,
                         modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
                     )
                 }

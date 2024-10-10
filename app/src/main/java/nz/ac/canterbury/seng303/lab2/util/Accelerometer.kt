@@ -5,14 +5,19 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 
-class Accelerometer(context: Context, private val listener: AccelerometerListener) : SensorEventListener {
+class Accelerometer(context: Context, private val listener: AccelerometerListener, private val settingsViewModel: SettingsViewModel
+) : SensorEventListener {
 
     private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accelerometer: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
 
     private val threshold = 0.5f
-    private val crashThreshold = -5.0f
+    private var crashThreshold = 5.0f
 
     // Store the last reported acceleration values
     private var lastX = 0f
@@ -21,6 +26,17 @@ class Accelerometer(context: Context, private val listener: AccelerometerListene
 
     private val reportingInterval = 100L
     private var lastReportedTime = System.currentTimeMillis()
+
+    init {
+        // Observe the crash sensitivity from SettingsViewModel
+        CoroutineScope(Dispatchers.Main).launch {
+            settingsViewModel.settings.collect { appSettings ->
+                appSettings?.let {
+                    crashThreshold = it.crashSensitivity
+                }
+            }
+        }
+    }
 
     fun start() {
         accelerometer?.let {
@@ -40,7 +56,6 @@ class Accelerometer(context: Context, private val listener: AccelerometerListene
             val z = it.values[2]
 
             detectCrash(x, y, z)
-
             val currentTime = System.currentTimeMillis()
             if ((Math.abs(x - lastX) > threshold || Math.abs(y - lastY) > threshold || Math.abs(z - lastZ) > threshold) &&
                 (currentTime - lastReportedTime >= reportingInterval)) {
@@ -58,7 +73,7 @@ class Accelerometer(context: Context, private val listener: AccelerometerListene
     private fun detectCrash(x: Float, y: Float, z: Float) {
         val accelerationMagnitude = Math.sqrt((x * x + y * y + z * z).toDouble()).toFloat()
 
-        if (accelerationMagnitude < crashThreshold) {
+        if (accelerationMagnitude > crashThreshold) {
             listener.onCrashDetected()
         }
     }
