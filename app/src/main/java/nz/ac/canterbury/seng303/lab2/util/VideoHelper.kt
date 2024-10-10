@@ -41,7 +41,7 @@ object VideoHelper {
             throw Exception("Folder path is not a directory!")
 
         val files = folder.listFiles()
-            ?.filter { it.isFile && it.extension == videoFileExtension }
+            ?.filter { it.isFile && it.extension == videoFileExtension && !it.isHidden }
             ?.sortedBy { it.lastModified() } ?: emptyList()
         return files
     }

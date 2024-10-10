@@ -27,6 +27,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import nz.ac.canterbury.seng303.lab2.screens.GalleryScreen
 import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
@@ -61,6 +62,10 @@ class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
                                 Settings(navController = navController)
                             }
 
+                            composable("Gallery") {
+//                                val settingsViewModel = koinViewModel<SettingsViewModel>()
+                                GalleryScreen(navController)
+                            }
                         }
                     }
                 }
