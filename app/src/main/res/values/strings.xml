@@ -5,8 +5,11 @@
     <string name="start_recording_button">Start Recording</string>
     <string name="stop_recording_button">Stop Recording</string>
     <string name="capture_button">Capture</string>
+    <string name="gallery_title">Gallery</string>
     <string name="settings_title">Settings</string>
     <string name="loading_settings">Loading settings...</string>
+    <string name="gallery_empty">No videos saved yet</string>
+    <string name="gallery_thumbnail_description">Thumbnail</string>
     <string name="video_length">Video Length</string>
     <string name="crash_detection_sensitivity">Crash Detection Sensitivity</string>
     <string name="auto_save_interval">Auto Save Interval</string>

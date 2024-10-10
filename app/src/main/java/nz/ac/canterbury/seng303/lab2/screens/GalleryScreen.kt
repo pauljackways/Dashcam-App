@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,13 +55,14 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(navController: NavController) {
     val context = LocalContext.current
-    val videos = VideoHelper.getAllVideosInFolder(VideoHelper.getSavedVideoAlbum(), "mp4")
+    val videos = VideoHelper.getAllVideosInFolder(VideoHelper.getSavedVideoAlbum(), "mp4").reversed()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -89,8 +91,7 @@ fun GalleryScreen(navController: NavController) {
                     ) {
                         if (isLandscape) Spacer(modifier = Modifier.weight(0.85f))
                         else Spacer(modifier = Modifier.weight(0.75f))
-                        // TODO update to strings.xml
-                        Text(text = "Gallery")
+                        Text(text = stringResource(R.string.gallery_title))
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 },
@@ -98,7 +99,7 @@ fun GalleryScreen(navController: NavController) {
                     IconButton(onClick = { navController.navigate("Home") }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back_button_description),
                         )
                     }
                 }
@@ -126,10 +127,9 @@ fun GalleryScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // TODO update with strings.xml
                 Text(
                     fontSize = 26.sp,
-                    text = "No videos saved yet",
+                    text = stringResource(R.string.gallery_empty),
                 )
             }
         }
@@ -174,7 +174,7 @@ fun GalleryScreen(navController: NavController) {
                                     if (thumbnail != null) {
                                         Image(
                                             bitmap = thumbnail.asImageBitmap(),
-                                            contentDescription = "Thumbnail",
+                                            contentDescription = stringResource(R.string.gallery_thumbnail_description),
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier.matchParentSize()
                                         )
