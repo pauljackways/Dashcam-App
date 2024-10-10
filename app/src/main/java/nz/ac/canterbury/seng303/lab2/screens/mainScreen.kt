@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.Recording
@@ -23,7 +25,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,28 +44,31 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 import nz.ac.canterbury.seng303.lab2.util.convertTimestampToVideoTitle
+import nz.ac.canterbury.seng303.lab2.util.AppLifecycleObserver
+import nz.ac.canterbury.seng303.lab2.util.NotificationHelper
 import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import java.io.File
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
+import androidx.core.util.Consumer
+import androidx.lifecycle.lifecycleScope
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.res.stringResource
 import nz.ac.canterbury.seng303.lab2.R
 import org.koin.androidx.compose.koinViewModel
@@ -111,12 +115,20 @@ fun MainScreen(
         }
     }
 
+    DisposableEffect(lifecycleOwner) {
+        val observer = AppLifecycleObserver(context, recordingLogicViewModel)
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     InitCamera(context, previewView, cameraController, lifecycleOwner, recordingLogicViewModel) {
         isCameraInitialized = true
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // TODO style and make gallery and settings buttons work
         Button(
             onClick = { navController.navigate("settings") },
             modifier = Modifier
@@ -153,6 +165,10 @@ fun MainScreen(
                                 if (recordingLogicViewModel.isRecording) {
                                     stopRecording(recordingLogicViewModel)
                                 } else {
+                                    // Request notification permission (not required to start recording)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        NotificationHelper.requestPermissions(context as Activity)
+                                    }
                                     startRecording(
                                         context, previewView, videoCapture, lifecycleOwner,
                                         cameraController, recordingLogicViewModel

@@ -19,4 +19,15 @@
     <string name="seconds">seconds</string>
     <string name="start_camera_button">Start Camera</string>
     <string name="audio_enable">Enable Audio</string>
+    <string name="recording_notification_channel_name">Dashcam not recording warning</string>
+    <string name="recording_notification_channel_description">Notifies you when you\'ve closed the app while recording.</string>
+    <string name="dashcam_warning_notification_title">Warning, Dashcam recording stopped!</string>
+    <string name="dashcam_warning_notification_description">Your dashcam only records while the app is open, tap here to reopen.</string>
+    <string name="driving_detection_notification_channel_title">Driving Detected</string>
+    <string name="driving_detection_notification_channel_description">Notifications that display when the app detects you may be driving</string>
+    <string name="driving_detection_notification_title">Are you driving?</string>
+    <string name="driving_detection_notification_description">We detected you may be driving without the dashcam. Tap here to open the app.</string>
+    <string name="driving_detection_foreground_notification_title">Dashcam Speed Detection</string>
+    <string name="driving_detection_foreground_notification_description">Monitoring your speed...</string>
+    <string name="driving_detection_foreground_notification_channel_name">Speed Detection Service Channel</string>
 </resources>
