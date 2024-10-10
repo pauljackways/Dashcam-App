@@ -58,11 +58,9 @@ object NotificationHelper {
             }
         }
 
-        println("should send a notification now")
-
         // TODO replace with string constant thingy
-        val name = "Actively Recording"
-        val descriptionText = "Notifications to allow you to quickly navigate back to the app if it is currently recording"
+        val name = "Dashcam not recording warning"
+        val descriptionText = "Notifies you when you've closed the app while recording."
         val importance = NotificationManager.IMPORTANCE_HIGH
         val channel = NotificationChannel(channelId, name, importance).apply {
             description = descriptionText
@@ -85,8 +83,8 @@ object NotificationHelper {
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_menu_camera)
-            .setContentTitle("Your Dashcam is Recording")
-            .setContentText("Tap here to open the app")
+            .setContentTitle("Warning, Dashcam recording stopped!")
+            .setContentText("Your dashcam only records while the app is open, tap here to reopen.")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(pendingIntent)
 
@@ -133,7 +131,7 @@ object NotificationHelper {
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.stat_sys_warning)
             .setContentTitle("Are you driving?")
-            .setContentText("We detected you may be driving at $speed kph without the dashcam. Tap here to open the app.")
+            .setContentText("We detected you may be driving without the dashcam. Tap here to open the app.")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
 
