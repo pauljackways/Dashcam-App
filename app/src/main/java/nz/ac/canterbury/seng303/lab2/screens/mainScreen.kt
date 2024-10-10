@@ -156,7 +156,8 @@ fun MainScreen(
             onClick = { navController.navigate("settings") },
             modifier = Modifier
                 .align(if (isPortrait) Alignment.TopStart else Alignment.BottomStart)
-                .padding(16.dp)
+                .padding(16.dp),
+            enabled = !recordingLogicViewModel.isRecording,
         ) {
             Text(text = stringResource(R.string.settings_button))
         }
@@ -166,7 +167,8 @@ fun MainScreen(
             },
             modifier = Modifier
                 .align(if (isPortrait) Alignment.TopEnd else Alignment.TopStart)
-                .padding(16.dp)
+                .padding(16.dp),
+            enabled = !recordingLogicViewModel.isRecording,
         ) {
             Text(text = stringResource(R.string.open_gallery_button))
         }
@@ -339,7 +341,7 @@ fun NoCameraPermissions(context: Context, onPermissionChange: () -> Unit) {
             onPermissionChange()
         }
     ) {
-        Text(text = stringResource(R.string.start_camera_button))
+        Text(text = stringResource(R.string.camera_permission_button))
     }
 }
 
