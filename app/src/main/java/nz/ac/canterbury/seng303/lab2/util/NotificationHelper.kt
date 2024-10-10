@@ -60,7 +60,6 @@ object NotificationHelper {
             }
         }
 
-        // TODO replace with string constant thingy
         val name = context.getString(R.string.recording_notification_channel_name)
         val descriptionText = context.getString(R.string.recording_notification_channel_description)
         val importance = NotificationManager.IMPORTANCE_HIGH
@@ -110,7 +109,6 @@ object NotificationHelper {
             return
         }
 
-        // TODO replace with string constant thingy
         val name = context.getString(R.string.driving_detection_notification_channel_title)
         val descriptionText = context.getString(R.string.driving_detection_notification_channel_description)
         val importance = NotificationManager.IMPORTANCE_DEFAULT

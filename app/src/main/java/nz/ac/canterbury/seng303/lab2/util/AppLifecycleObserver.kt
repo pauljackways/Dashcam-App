@@ -1,6 +1,7 @@
 package nz.ac.canterbury.seng303.lab2.util
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -12,7 +13,7 @@ class AppLifecycleObserver(
 ) : LifecycleEventObserver {
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
         when (event) {
-            Lifecycle.Event.ON_PAUSE -> {
+            Lifecycle.Event.ON_STOP -> {
                 if (recordingLogicViewModel.isRecording) {
                     NotificationHelper.sendRecordingNotification(context)
                 }
