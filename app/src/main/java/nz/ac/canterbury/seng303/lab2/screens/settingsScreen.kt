@@ -13,30 +13,40 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.models.AppSettings
+import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Settings(navController: NavController, viewModel: SettingsViewModel) {
-    val settings by viewModel.settings.collectAsState()
+fun Settings(navController: NavController) {
+    val settingsViewModel: SettingsViewModel = koinViewModel()
+    val recordingLogicViewModel: RecordingLogicViewModel = koinViewModel()
+    
+    val settings by settingsViewModel.settings.collectAsState()
 
     if (settings == null) {
-        Text("Loading settings...")
+        Text(text = stringResource(R.string.loading_settings))
         return
     }
 
     var tempVideoLength by rememberSaveable { mutableStateOf(settings!!.videoLength) }
-    var tempVideoQuality by rememberSaveable { mutableStateOf(settings!!.videoQuality) }
     var tempCrashSensitivity by rememberSaveable { mutableStateOf(settings!!.crashSensitivity) }
+    var tempAutoSaveIntervalMillis by rememberSaveable { mutableStateOf(settings!!.autoSaveIntervalMillis) }
+    var tempAudioEnable by rememberSaveable { mutableStateOf(settings!!.audioEnable) }
 
     val coroutineScope = rememberCoroutineScope()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+
 
     Scaffold(
         topBar = {
@@ -48,7 +58,7 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                     ) {
                         if (isLandscape) Spacer(modifier = Modifier.weight(0.85f))
                         else Spacer(modifier = Modifier.weight(0.75f))
-                        Text(text = "Settings")
+                        Text(text = (stringResource(R.string.settings_title)))
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 },
@@ -56,7 +66,7 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                     IconButton(onClick = { navController.navigate("Home") }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back_button_description)
                         )
                     }
                 }
@@ -84,7 +94,8 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
         ) {
             // Video Length Slider
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Video Length: $tempVideoLength seconds")
+                Text(text = stringResource(R.string.video_length) +
+                        ": $tempVideoLength " + stringResource(R.string.seconds))
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.CenterStart
@@ -100,17 +111,9 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 }
             }
 
-            // Video Quality Radio Buttons
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Video Quality")
-                RadioOption("Low", tempVideoQuality, onSelected = { tempVideoQuality = it })
-                RadioOption("Medium", tempVideoQuality, onSelected = { tempVideoQuality = it })
-                RadioOption("High", tempVideoQuality, onSelected = { tempVideoQuality = it })
-            }
-
             // Crash Detection Sensitivity Slider
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Crash Detection Sensitivity: ${(tempCrashSensitivity * 100).toInt()}%")
+                Text(text = stringResource(R.string.crash_detection_sensitivity) + ": ${(tempCrashSensitivity * 100).toInt()}%")
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.CenterStart
@@ -126,44 +129,61 @@ fun Settings(navController: NavController, viewModel: SettingsViewModel) {
                 }
             }
 
+            // Auto Save Interval Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = stringResource(R.string.auto_save_interval) + ": ${tempAutoSaveIntervalMillis / 1000} "
+                        + stringResource(R.string.seconds))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempAutoSaveIntervalMillis.toFloat(),
+                        onValueChange = { newValue ->
+                            tempAutoSaveIntervalMillis = newValue.toLong()
+                        },
+                        valueRange = 10000f..60000f, // Between 10s and 60s
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = stringResource(R.string.audio_enable))
+                Spacer(modifier = Modifier.weight(1f))
+                Switch(
+                    checked = tempAudioEnable,
+                    onCheckedChange = { tempAudioEnable = it },
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             // Save Button
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        viewModel.saveSettings(
+                        settingsViewModel.saveSettings(
                             AppSettings(
                                 videoLength = tempVideoLength,
-                                videoQuality = tempVideoQuality,
-                                crashSensitivity = tempCrashSensitivity
+                                crashSensitivity = tempCrashSensitivity,
+                                autoSaveIntervalMillis = tempAutoSaveIntervalMillis,
+                                audioEnable = tempAudioEnable
                             )
                         )
+
+                        recordingLogicViewModel.updateAudioEnable(tempAudioEnable)
                         navController.navigateUp()
                     }
                 },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text(text = "Save")
+                Text(text = stringResource(R.string.save_button))
             }
         }
-    }
-}
-
-@Composable
-fun RadioOption(
-    label: String,
-    selectedOption: String,
-    onSelected: (String) -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(top = 8.dp)
-    ) {
-        RadioButton(
-            selected = selectedOption == label,
-            onClick = { onSelected(label) }
-        )
-        Text(text = label, modifier = Modifier.padding(start = 4.dp))
     }
 }

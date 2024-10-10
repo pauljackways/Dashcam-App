@@ -32,8 +32,11 @@ import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
 import nz.ac.canterbury.seng303.lab2.util.Accelerometer
+import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.compose.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
 
@@ -56,8 +59,7 @@ class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
                             }
 
                             composable("Settings") {
-                                val settingsViewModel = koinViewModel<SettingsViewModel>()
-                                Settings(navController, settingsViewModel)
+                                Settings(navController = navController)
                             }
 
                             composable("Gallery") {

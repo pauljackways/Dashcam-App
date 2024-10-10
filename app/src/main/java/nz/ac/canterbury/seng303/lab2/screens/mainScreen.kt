@@ -4,17 +4,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.*
+import androidx.camera.video.FileOutputOptions
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.core.LinearEasing
@@ -30,7 +26,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -48,29 +43,35 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
-import androidx.core.content.FileProvider
 import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
 import nz.ac.canterbury.seng303.lab2.util.convertTimestampToVideoTitle
 import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import java.io.File
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
+import androidx.compose.ui.res.stringResource
+import nz.ac.canterbury.seng303.lab2.R
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MainScreen(
     navController: NavController,
-    recordingLogicViewModel: RecordingLogicViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -78,6 +79,7 @@ fun MainScreen(
     var isCameraInitialized by remember { mutableStateOf(false) }
     var previewView : PreviewView = remember { PreviewView(context) }
     val videoCapture : MutableState<VideoCapture<Recorder>?> = remember{ mutableStateOf(null) }
+    val recordingLogicViewModel: RecordingLogicViewModel = koinViewModel()
 
     val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
 
@@ -92,6 +94,9 @@ fun MainScreen(
     )
 
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
+        VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
+        recordingLogicViewModel.setPermissions(hasPermissions(context))
+        recordingLogicViewModel.toggleRender()
         try {
             lifecycleOwner.lifecycleScope.launch {
                 videoCapture.value = context.createVideoCaptureUseCase(
@@ -118,33 +123,17 @@ fun MainScreen(
                 .align(if (isPortrait) Alignment.TopStart else Alignment.BottomStart)
                 .padding(16.dp)
         ) {
-            Text("Settings")
+            Text(text = stringResource(R.string.settings_button))
         }
         Button(
             onClick = {
-//                val file = File(VideoHelper.getSavedVideoAlbum(), "test.mp4")
-////                val file = context.filesDir
-//
-//                val albumUri: Uri = FileProvider.getUriForFile(
-//                    context,
-//                    "${context.packageName}.provider", // Use your app's package name
-//                    file
-//                )
-//                println(Uri.withAppendedPath(albumUri, "/test.mp4").path)
-//                val intent = Intent(Intent.ACTION_VIEW).apply {
-//                    setDataAndType(albumUri, "video/mp4") // Specify folder type
-//                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-//                }
-//
-//                // Start the activity
-//                context.startActivity(intent)
                 navController.navigate("Gallery")
             },
             modifier = Modifier
                 .align(if (isPortrait) Alignment.TopEnd else Alignment.TopStart)
                 .padding(16.dp)
         ) {
-            Text("Gallery")
+            Text(text = stringResource(R.string.open_gallery_button))
         }
 
         if (isCameraInitialized && hasPermissions(context)) {
@@ -216,12 +205,12 @@ fun MainScreen(
                         if (!recordingLogicViewModel.isRecording) {
                             Text(
                                 style = textStyle,
-                                text = "Start",
+                                text = stringResource(R.string.start_recording_button),
                             )
                         } else {
                             Text(
                                 style = textStyle,
-                                text = "Cancel",
+                                text = stringResource(R.string.stop_recording_button),
                             )
                         }
                     }
@@ -242,7 +231,7 @@ fun MainScreen(
                     shape = RoundedCornerShape(12),
                 ) {
                     Text(
-                        text = "CAPTURE",
+                        text = stringResource(R.string.capture_button),
                         modifier = Modifier.padding(6.dp),
                         style = TextStyle(
                             letterSpacing = 0.1.em,
@@ -255,79 +244,6 @@ fun MainScreen(
             }
         }
     }
-
-//    Box(
-//        modifier = Modifier.fillMaxSize()
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.SpaceBetween,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceEvenly
-//            ) {
-//                Button(
-//                    onClick = {
-//                        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-//                        context.startActivity(intent)
-//                    }
-//                ) {
-//                    Text(text = "Open Gallery")
-//                }
-//
-//                Button(
-//                    onClick = { navController.navigate("settings") }
-//                ) {
-//                    Text(text = "Settings")
-//                }
-//            }
-//
-//            Box(
-//                modifier = Modifier.fillMaxSize(),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                if (recordingLogicViewModel.isRecording) {
-//                    Column(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        verticalArrangement = Arrangement.Center,
-//                        horizontalAlignment = Alignment.CenterHorizontally
-//                    ) {
-//                        Button(
-//                            onClick = {
-//                                saveRecording(recordingLogicViewModel)
-//                            },
-//                            modifier = Modifier.size(100.dp),
-//                            shape = MaterialTheme.shapes.medium
-//                        ) {
-//                            Text(text = "Capture")
-//                        }
-//
-//                        Button(
-//                            onClick = { stopRecording(recordingLogicViewModel) },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(16.dp)
-//                        ) {
-//                            Text(text = "Stop Recording")
-//                        }
-//                    }
-//                } else if (isCameraInitialized && hasPermissions(context)) {
-//                    Button(
-//                        onClick = { startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel) },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(16.dp)
-//                    ) {
-//                        Text(text = "Start Recording")
-//                    }
-//                }
-//            }
-//        }
-//    }
 }
 
 @Composable
@@ -339,21 +255,20 @@ fun InitCamera(
     recordingLogicViewModel: RecordingLogicViewModel,
     onCameraInitialized: () -> Unit
 ) {
-    var hasPermissions by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (hasPermissions) {
+        if (recordingLogicViewModel.hasPermissions()) {
             CameraPreview(context, previewView, cameraController, lifecycleOwner) {
                 onCameraInitialized()
             }
         } else {
             NoCameraPermissions(context) {
                 // Callback to update permissions
-                hasPermissions = hasPermissions(context)
+                recordingLogicViewModel.setPermissions(hasPermissions(context))
                 recordingLogicViewModel.toggleRender()
             }
         }
@@ -385,7 +300,7 @@ fun NoCameraPermissions(context: Context, onPermissionChange: () -> Unit) {
             onPermissionChange()
         }
     ) {
-        Text(text = "Start camera")
+        Text(text = stringResource(R.string.start_camera_button))
     }
 }
 
@@ -446,6 +361,7 @@ fun isFolderEmpty(context: Context): Boolean {
     return files == null || files.isEmpty()
 }
 
+@SuppressLint("NewApi")
 private fun handleFinalizeEvent(
     context: Context,
     previewView: PreviewView,
@@ -471,6 +387,9 @@ private fun handleFinalizeEvent(
         VideoHelper.stitchAllVideosInFolder(context, context.filesDir, "mp4") { success ->
             if (success) {
                 VideoHelper.deleteAllVideosInFolder(context.filesDir, "mp4")
+                context.mainExecutor.execute {
+                    Toast.makeText(context, "Video Captured!", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Log.e("Camera", "Stitching videos failed! not deleting video sections")
             }
@@ -480,7 +399,7 @@ private fun handleFinalizeEvent(
         recordingLogicViewModel.clearSaveRequest()
     } else {
         val mediaFiles = files.sortedByDescending { it.lastModified() }
-        for (i in 2 until mediaFiles.size) {
+        for (i in 3 until mediaFiles.size) {
             Log.i("camera", "Deleting file: ${mediaFiles[i].name}")
             mediaFiles[i].delete()
         }
