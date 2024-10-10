@@ -4,67 +4,68 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import androidx.camera.video.FileOutputOptions
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoRecordEvent
-import androidx.camera.view.LifecycleCameraController
-import androidx.camera.view.PreviewView
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import nz.ac.canterbury.seng303.lab2.util.convertTimestampToVideoTitle
-import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
-import java.io.File
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
-import androidx.core.util.Consumer
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-import java.util.concurrent.Executor
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import android.os.Handler
-import android.os.Looper
+import androidx.camera.view.LifecycleCameraController
+import androidx.camera.view.PreviewView
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
+import androidx.core.content.FileProvider
+import androidx.core.util.Consumer
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import nz.ac.canterbury.seng303.lab2.util.VideoHelper
+import nz.ac.canterbury.seng303.lab2.util.convertTimestampToVideoTitle
+import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
+import java.io.File
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.Executor
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+
 
 @Composable
 fun MainScreen(
@@ -112,7 +113,7 @@ fun MainScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         // TODO style and make gallery and settings buttons work
         Button(
-            onClick = { /* TODO */ },
+            onClick = { navController.navigate("settings") },
             modifier = Modifier
                 .align(if (isPortrait) Alignment.TopStart else Alignment.BottomStart)
                 .padding(16.dp)
@@ -120,7 +121,25 @@ fun MainScreen(
             Text("Settings")
         }
         Button(
-            onClick = { /* TODO */ },
+            onClick = {
+//                val file = File(VideoHelper.getSavedVideoAlbum(), "test.mp4")
+////                val file = context.filesDir
+//
+//                val albumUri: Uri = FileProvider.getUriForFile(
+//                    context,
+//                    "${context.packageName}.provider", // Use your app's package name
+//                    file
+//                )
+//                println(Uri.withAppendedPath(albumUri, "/test.mp4").path)
+//                val intent = Intent(Intent.ACTION_VIEW).apply {
+//                    setDataAndType(albumUri, "video/mp4") // Specify folder type
+//                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+//                }
+//
+//                // Start the activity
+//                context.startActivity(intent)
+                navController.navigate("Gallery")
+            },
             modifier = Modifier
                 .align(if (isPortrait) Alignment.TopEnd else Alignment.TopStart)
                 .padding(16.dp)
@@ -154,21 +173,27 @@ fun MainScreen(
                             Button(
                                 onClick = { buttonClicked() },
                                 shape = CircleShape,
-                                modifier = Modifier.size(80.dp).align(Alignment.Center),
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .align(Alignment.Center),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                             ) {}
                             if (!recordingLogicViewModel.isRecording) {
                                 Button(
                                     onClick = { buttonClicked() },
                                     shape = CircleShape,
-                                    modifier = Modifier.size(30.dp).align(Alignment.Center),
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .align(Alignment.Center),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                                 ) {}
                             } else {
                                 Button(
                                     onClick = { buttonClicked() },
                                     shape = RoundedCornerShape(20),
-                                    modifier = Modifier.size(30.dp).align(Alignment.Center)
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .align(Alignment.Center)
                                         .graphicsLayer(rotationZ = buttonRotationAnimation),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                                 ) {}
