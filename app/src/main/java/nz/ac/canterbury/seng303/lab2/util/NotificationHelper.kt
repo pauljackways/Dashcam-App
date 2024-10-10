@@ -11,11 +11,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import nz.ac.canterbury.seng303.lab2.MainActivity
+import nz.ac.canterbury.seng303.lab2.R
 
 object NotificationHelper {
     private const val RECORDING_NOTIFICATION_ID = 1
@@ -59,8 +61,8 @@ object NotificationHelper {
         }
 
         // TODO replace with string constant thingy
-        val name = "Dashcam not recording warning"
-        val descriptionText = "Notifies you when you've closed the app while recording."
+        val name = context.getString(R.string.recording_notification_channel_name)
+        val descriptionText = context.getString(R.string.recording_notification_channel_description)
         val importance = NotificationManager.IMPORTANCE_HIGH
         val channel = NotificationChannel(channelId, name, importance).apply {
             description = descriptionText
@@ -83,8 +85,8 @@ object NotificationHelper {
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_menu_camera)
-            .setContentTitle("Warning, Dashcam recording stopped!")
-            .setContentText("Your dashcam only records while the app is open, tap here to reopen.")
+            .setContentTitle(context.getString(R.string.dashcam_warning_notification_title))
+            .setContentText(context.getString(R.string.dashcam_warning_notification_description))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(pendingIntent)
 
@@ -109,8 +111,8 @@ object NotificationHelper {
         }
 
         // TODO replace with string constant thingy
-        val name = "Driving Detected"
-        val descriptionText = "Notifications that display when the app detects you may be driving"
+        val name = context.getString(R.string.driving_detection_notification_channel_title)
+        val descriptionText = context.getString(R.string.driving_detection_notification_channel_description)
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel(channelId, name, importance).apply {
             description = descriptionText
@@ -130,8 +132,8 @@ object NotificationHelper {
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.stat_sys_warning)
-            .setContentTitle("Are you driving?")
-            .setContentText("We detected you may be driving without the dashcam. Tap here to open the app.")
+            .setContentTitle(context.getString(R.string.driving_detection_notification_title))
+            .setContentText(context.getString(R.string.driving_detection_notification_description))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
 
@@ -148,7 +150,7 @@ object NotificationHelper {
     fun createDrivingDetectionServiceNotificationChannel(context: Context) {
         val channel = NotificationChannel(
             DRIVING_DETECTION_FOREGROUND_CHANNEL_ID,
-            "Speed Detection Service Channel",
+            context.getString(R.string.driving_detection_foreground_notification_channel_name),
             NotificationManager.IMPORTANCE_MIN
         )
         val notificationManager: NotificationManager =
@@ -158,8 +160,8 @@ object NotificationHelper {
 
     fun getDrivingDetectionServiceNotification(context: Context): Notification {
         return NotificationCompat.Builder(context, DRIVING_DETECTION_FOREGROUND_CHANNEL_ID)
-            .setContentTitle("Dashcam Speed Detection")
-            .setContentText("Monitoring your speed...")
+            .setContentTitle(context.getString(R.string.driving_detection_foreground_notification_title))
+            .setContentText(context.getString(R.string.driving_detection_foreground_notification_description))
             .setSmallIcon(android.R.drawable.ic_dialog_map)
             .setOngoing(true)
             .setSilent(true)

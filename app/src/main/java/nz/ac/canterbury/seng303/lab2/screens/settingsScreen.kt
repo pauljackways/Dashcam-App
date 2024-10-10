@@ -35,7 +35,6 @@ fun Settings(navController: NavController) {
 
     val settings by settingsViewModel.settings.collectAsState()
 
-    // TODO move into view model
     var displayBackgroundLocationButton by remember { mutableStateOf(false) }
 
     if (settings == null) {

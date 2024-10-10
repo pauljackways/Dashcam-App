@@ -129,7 +129,6 @@ fun MainScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // TODO style and make gallery and settings buttons work
         Button(
             onClick = { navController.navigate("settings") },
             modifier = Modifier
