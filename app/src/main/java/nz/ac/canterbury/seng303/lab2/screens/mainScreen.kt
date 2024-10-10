@@ -91,6 +91,9 @@ fun MainScreen(
 
     val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
 
+    val crashCooldownMillis = 5000
+    var lastCrashDetectionMillis = System.currentTimeMillis()
+
     val infiniteTransition = rememberInfiniteTransition(label = "Infinite recording button rotation")
     val buttonRotationAnimation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -104,11 +107,14 @@ fun MainScreen(
     LaunchedEffect(Unit) { // Use LaunchedEffect to run the coroutine on composition
         val accelerometerListener = object : Accelerometer.AccelerometerListener {
             override fun onAccelerationChanged(x: Float, y: Float, z: Float) {
-                Log.d("Accelerometer", "Acceleration changed: x = $x, y = $y, z = $z")
+//                Log.d("Accelerometer", "Acceleration changed: x = $x, y = $y, z = $z")
             }
 
             override fun onCrashDetected() {
-                saveRecording(recordingLogicViewModel)
+                if (System.currentTimeMillis() - lastCrashDetectionMillis > crashCooldownMillis) {
+                    lastCrashDetectionMillis = System.currentTimeMillis()
+                    saveRecording(recordingLogicViewModel)
+                }
             }
         }
 

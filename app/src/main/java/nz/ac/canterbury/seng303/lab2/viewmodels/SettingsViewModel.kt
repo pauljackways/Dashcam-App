@@ -20,7 +20,7 @@ class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewMod
         .map { preferences ->
             AppSettings(
                 videoLength = preferences[SettingsPreferencesKeys.VIDEO_LENGTH] ?: 30,
-                crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 0.5f,
+                crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 30f,
                 autoSaveIntervalMillis = preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] ?: 10000L,
                 audioEnable = preferences[SettingsPreferencesKeys.AUDIO_ENABLE] ?: false
             )

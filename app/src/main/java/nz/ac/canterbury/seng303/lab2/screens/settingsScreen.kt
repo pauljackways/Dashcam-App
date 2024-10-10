@@ -117,8 +117,9 @@ fun Settings(navController: NavController) {
                 }
             }
 
+            val sensitivityRange = 15f..40f
             Column(modifier = Modifier.fillMaxWidth()) {
-                val sensitivityPercentage = ((tempCrashSensitivity - 5) / (20 - 5)) * 100
+                val sensitivityPercentage = ((tempCrashSensitivity - sensitivityRange.start) / (sensitivityRange.endInclusive - sensitivityRange.start)) * 100
 
                 Text(
                     text = stringResource(R.string.crash_detection_sensitivity) + ": ${sensitivityPercentage.toInt()}%"
@@ -133,7 +134,7 @@ fun Settings(navController: NavController) {
                         onValueChange = { newValue ->
                             tempCrashSensitivity = newValue
                         },
-                        valueRange = 5f..20f,
+                        valueRange = sensitivityRange,
                         modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
                     )
                 }
