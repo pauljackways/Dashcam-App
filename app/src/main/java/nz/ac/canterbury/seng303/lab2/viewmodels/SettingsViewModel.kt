@@ -16,22 +16,24 @@ import nz.ac.canterbury.seng303.lab2.models.AppSettings
 
 class SettingsViewModel(private val dataStore: DataStore<Preferences>) : ViewModel() {
 
-    val settings: StateFlow<AppSettings> = dataStore.data
+    val settings: StateFlow<AppSettings?> = dataStore.data
         .map { preferences ->
             AppSettings(
                 videoLength = preferences[SettingsPreferencesKeys.VIDEO_LENGTH] ?: 30,
-                videoQuality = preferences[SettingsPreferencesKeys.VIDEO_QUALITY] ?: "High",
-                crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 0.5f
+                crashSensitivity = preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] ?: 0.5f,
+                autoSaveIntervalMillis = preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] ?: 10000L,
+                audioEnable = preferences[SettingsPreferencesKeys.AUDIO_ENABLE] ?: false
             )
         }
-        .stateIn(viewModelScope, SharingStarted.Lazily, AppSettings())
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     fun saveSettings(newSettings: AppSettings) {
         viewModelScope.launch {
             dataStore.edit { preferences ->
                 preferences[SettingsPreferencesKeys.VIDEO_LENGTH] = newSettings.videoLength
-                preferences[SettingsPreferencesKeys.VIDEO_QUALITY] = newSettings.videoQuality
                 preferences[SettingsPreferencesKeys.CRASH_SENSITIVITY] = newSettings.crashSensitivity
+                preferences[SettingsPreferencesKeys.AUTO_SAVE_INTERVAL] = newSettings.autoSaveIntervalMillis
+                preferences[SettingsPreferencesKeys.AUDIO_ENABLE] = newSettings.audioEnable
             }
             Log.d("SettingsViewModel", "Saved settings: $newSettings")
         }

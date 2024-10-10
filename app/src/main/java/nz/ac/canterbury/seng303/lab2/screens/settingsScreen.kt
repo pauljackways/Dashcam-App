@@ -1,154 +1,219 @@
 package nz.ac.canterbury.seng303.lab2.screens
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+
+import android.content.res.Configuration
+import android.util.Log
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import nz.ac.canterbury.seng303.lab2.R
 import nz.ac.canterbury.seng303.lab2.models.AppSettings
+import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
+import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Settings(navController: NavController, viewModel: SettingsViewModel) {
+fun Settings(navController: NavController) {
     val context = LocalContext.current
 
-    val settings by viewModel.settings.collectAsState()
+    val settingsViewModel: SettingsViewModel = koinViewModel()
+    val recordingLogicViewModel: RecordingLogicViewModel = koinViewModel()
 
-    var tempVideoLength by remember { mutableStateOf(settings.videoLength) }
-    var tempVideoQuality by remember { mutableStateOf(settings.videoQuality) }
-    var tempCrashSensitivity by remember { mutableStateOf(settings.crashSensitivity) }
+    val settings by settingsViewModel.settings.collectAsState()
 
+    // TODO move into view model
     var displayBackgroundLocationButton by remember { mutableStateOf(false) }
 
-    // synchronizes values for UI -- weird fetching thing
-    LaunchedEffect(settings) {
-        tempVideoLength = settings.videoLength
-        tempVideoQuality = settings.videoQuality
-        tempCrashSensitivity = settings.crashSensitivity
+    if (settings == null) {
+        Text(text = stringResource(R.string.loading_settings))
+        return
     }
+
+    var tempVideoLength by rememberSaveable { mutableStateOf(settings!!.videoLength) }
+    var tempCrashSensitivity by rememberSaveable { mutableStateOf(settings!!.crashSensitivity) }
+    var tempAutoSaveIntervalMillis by rememberSaveable { mutableStateOf(settings!!.autoSaveIntervalMillis) }
+    var tempAudioEnable by rememberSaveable { mutableStateOf(settings!!.audioEnable) }
 
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(text = "Settings")
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-        // Video Length Slider
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Video Length: $tempVideoLength seconds")
-            Slider(
-                value = tempVideoLength.toFloat(),
-                onValueChange = { newValue ->
-                    tempVideoLength = newValue.toInt()
+
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isLandscape) Spacer(modifier = Modifier.weight(0.85f))
+                        else Spacer(modifier = Modifier.weight(0.75f))
+                        Text(text = (stringResource(R.string.settings_title)))
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 },
-                valueRange = 10f..60f
-            )
-        }
-
-        // Video Quality Radio Buttons
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Video Quality")
-            Row {
-                RadioButton(
-                    selected = tempVideoQuality == "Low",
-                    onClick = { tempVideoQuality = "Low" }
-                )
-                Text(text = "Low", modifier = Modifier.padding(start = 8.dp))
-            }
-            Row {
-                RadioButton(
-                    selected = tempVideoQuality == "Medium",
-                    onClick = { tempVideoQuality = "Medium" }
-                )
-                Text(text = "Medium", modifier = Modifier.padding(start = 8.dp))
-            }
-            Row {
-                RadioButton(
-                    selected = tempVideoQuality == "High",
-                    onClick = { tempVideoQuality = "High" }
-                )
-                Text(text = "High", modifier = Modifier.padding(start = 8.dp))
-            }
-        }
-
-        // Crash Detection Sensitivity Slider
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Crash Detection Sensitivity: ${(tempCrashSensitivity * 100).toInt()}%")
-            Slider(
-                value = tempCrashSensitivity,
-                onValueChange = { newValue ->
-                    tempCrashSensitivity = newValue
-                },
-                valueRange = 0f..1f
-            )
-        }
-
-        // Enable Driving Detection Button
-        Column(modifier = Modifier.fillMaxWidth()) {
-            if (!SpeedDetectionService.hasPreciseLocationPermission(LocalContext.current)
-                && !displayBackgroundLocationButton) {
-                Text("To enable driving detection please allow additional permissions:")
-                Button(onClick = {
-                    SpeedDetectionService.requestPreciseLocationPermission(context)
-                    displayBackgroundLocationButton = true
-                }) {
-                    Text("Allow permissions")
-                }
-            } else if (!SpeedDetectionService.hasBackgroundLocationPermission(LocalContext.current)
-                && displayBackgroundLocationButton) {
-                Text("To enable driving detection please allow background location permissions:")
-                Button(onClick = {
-                    SpeedDetectionService.requestBackgroundLocationPermission(context)
-                    displayBackgroundLocationButton = false
-                }) {
-                    Text("Allow background location permissions")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Save Button
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    viewModel.saveSettings(
-                        AppSettings(
-                            videoLength = tempVideoLength,
-                            videoQuality = tempVideoQuality,
-                            crashSensitivity = tempCrashSensitivity
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("Home") }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back_button_description)
                         )
-                    )
-                    navController.navigateUp()
+                    }
                 }
-            },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+    ) { paddingValues ->
+        val scrollState = rememberScrollState()
+
+        val modifier = if (isLandscape) {
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+                .verticalScroll(scrollState)
+        } else {
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        }
+
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = "Save")
+            // Video Length Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = stringResource(R.string.video_length) +
+                        ": $tempVideoLength " + stringResource(R.string.seconds))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempVideoLength.toFloat(),
+                        onValueChange = { newValue ->
+                            tempVideoLength = newValue.toInt()
+                        },
+                        valueRange = 10f..60f,
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Crash Detection Sensitivity Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = stringResource(R.string.crash_detection_sensitivity) + ": ${(tempCrashSensitivity * 100).toInt()}%")
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempCrashSensitivity,
+                        onValueChange = { newValue ->
+                            tempCrashSensitivity = newValue
+                        },
+                        valueRange = 0f..1f,
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Auto Save Interval Slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = stringResource(R.string.auto_save_interval) + ": ${tempAutoSaveIntervalMillis / 1000} "
+                        + stringResource(R.string.seconds))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Slider(
+                        value = tempAutoSaveIntervalMillis.toFloat(),
+                        onValueChange = { newValue ->
+                            tempAutoSaveIntervalMillis = newValue.toLong()
+                        },
+                        valueRange = 10000f..60000f, // Between 10s and 60s
+                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = stringResource(R.string.audio_enable))
+                Spacer(modifier = Modifier.weight(1f))
+                Switch(
+                    checked = tempAudioEnable,
+                    onCheckedChange = { tempAudioEnable = it },
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+            }
+
+            // Enable Driving Detection Button
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (!SpeedDetectionService.hasPreciseLocationPermission(LocalContext.current)
+                    && !displayBackgroundLocationButton) {
+                    Text("To enable driving detection please allow additional permissions:")
+                    Button(onClick = {
+                        SpeedDetectionService.requestPreciseLocationPermission(context)
+                        displayBackgroundLocationButton = true
+                    }) {
+                        Text("Allow permissions")
+                    }
+                } else if (!SpeedDetectionService.hasBackgroundLocationPermission(LocalContext.current)
+                    && displayBackgroundLocationButton) {
+                    Text("To enable driving detection please allow background location permissions:")
+                    Button(onClick = {
+                        SpeedDetectionService.requestBackgroundLocationPermission(context)
+                        displayBackgroundLocationButton = false
+                    }) {
+                        Text("Allow background location permissions")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Save Button
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        settingsViewModel.saveSettings(
+                            AppSettings(
+                                videoLength = tempVideoLength,
+                                crashSensitivity = tempCrashSensitivity,
+                                autoSaveIntervalMillis = tempAutoSaveIntervalMillis,
+                                audioEnable = tempAudioEnable
+                            )
+                        )
+
+                        recordingLogicViewModel.updateAudioEnable(tempAudioEnable)
+                        navController.navigateUp()
+                    }
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(text = stringResource(R.string.save_button))
+            }
         }
     }
 }

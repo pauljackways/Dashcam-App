@@ -11,19 +11,33 @@ import androidx.lifecycle.ViewModel
 
 class RecordingLogicViewModel : ViewModel() {
 
+    var intervalMillis: Long by mutableStateOf(30000)
+        private set
+
     var toggle: Boolean by mutableStateOf(false)
         private set
 
     fun toggleRender() {
         toggle = !toggle
     }
-    // Recording-related properties
+
+    private var permit: Boolean by mutableStateOf(false)
+
+    fun hasPermissions(): Boolean {
+        return permit
+    }
+
+    fun setPermissions(perm: Boolean) {
+        permit = perm
+    }
+
     private var _recording: Recording? = null
         private set
 
     private var saveRequested = false
 
-    // Getter and Setter for recording
+    private var autoSaveRequested = false
+
     fun getRecording(): Recording? {
         return _recording
     }
@@ -36,6 +50,10 @@ class RecordingLogicViewModel : ViewModel() {
         return saveRequested
     }
 
+    fun autoSaveRequested(): Boolean {
+        return autoSaveRequested
+    }
+
     fun requestSave() {
         saveRequested = true
     }
@@ -44,11 +62,13 @@ class RecordingLogicViewModel : ViewModel() {
         saveRequested = false
     }
 
-    // Mutable state for recording status
+    fun clearAutoSaveRequest() {
+        autoSaveRequested = false
+    }
+
     var isRecording: Boolean by mutableStateOf(false)
         private set
 
-    // Recording start state
     var recordingStart: Boolean by mutableStateOf(false)
 
     fun startRecording() {
@@ -62,10 +82,18 @@ class RecordingLogicViewModel : ViewModel() {
         isRecording = false
     }
 
-    // Audio enable state
+    fun autoSave() {
+        autoSaveRequested = true
+        _recording?.stop()
+    }
+
     var audioEnable: Boolean by mutableStateOf(false)
         private set
 
+    // didn't want to delete toggle just in case but using this for now
+    fun updateAudioEnable(enable: Boolean) {
+        audioEnable = enable
+    }
     fun toggleAudioEnable() {
         audioEnable = !audioEnable
     }

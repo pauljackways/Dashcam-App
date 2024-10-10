@@ -68,6 +68,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.6.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.camera:camera-video:1.3.4")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     testImplementation("junit:junit:4.13.2")
@@ -83,4 +84,5 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.1.4")
     implementation("io.insert-koin:koin-androidx-compose:3.4.4")
 
+    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
 }

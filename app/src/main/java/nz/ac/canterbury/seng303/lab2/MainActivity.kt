@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -23,38 +24,31 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import nz.ac.canterbury.seng303.lab2.screens.GalleryScreen
 import nz.ac.canterbury.seng303.lab2.screens.MainScreen
 import nz.ac.canterbury.seng303.lab2.screens.Settings
 import nz.ac.canterbury.seng303.lab2.ui.theme.Lab1Theme
+import nz.ac.canterbury.seng303.lab2.util.Accelerometer
+import nz.ac.canterbury.seng303.lab2.viewmodels.RecordingLogicViewModel
 import nz.ac.canterbury.seng303.lab2.util.SpeedDetectionService
 import nz.ac.canterbury.seng303.lab2.viewmodels.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.compose.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), Accelerometer.AccelerometerListener {
+    private lateinit var accelerometer: Accelerometer
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        accelerometer = Accelerometer(this, this)
+
         setContent {
             Lab1Theme {
                 val navController = rememberNavController()
-                Scaffold(
-                    topBar = {
-                        // Add your AppBar content here
-                        TopAppBar(
-                            title = { Text("303 a2") },
-                            navigationIcon = {
-                                IconButton(onClick = { navController.navigate("Home") }) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                            }
-                        )
-                    }
-                ) {
-
+                Scaffold() {
                     Box(modifier = Modifier.padding(it)) {
                         NavHost(navController = navController, startDestination = "Home") {
                             composable("Home") {
@@ -62,15 +56,36 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("Settings") {
-                                val settingsViewModel = koinViewModel<SettingsViewModel>()
-                                Settings(navController, settingsViewModel)
+                                Settings(navController = navController)
                             }
 
+                            composable("Gallery") {
+//                                val settingsViewModel = koinViewModel<SettingsViewModel>()
+                                GalleryScreen(navController)
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    override fun onAccelerationChanged(x: Float, y: Float, z: Float) {
+        System.out.println("Accelerometer: x: $x, y: $y, z: $z")
+}
+
+    override fun onCrashDetected() {
+        println("Crash detected!")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        accelerometer.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        accelerometer.stop()
     }
 
     override fun onStart() {
