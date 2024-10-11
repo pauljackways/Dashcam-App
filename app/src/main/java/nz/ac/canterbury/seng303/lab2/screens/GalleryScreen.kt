@@ -6,19 +6,24 @@ import android.graphics.Bitmap
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -106,100 +111,90 @@ fun GalleryScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        val scrollState = rememberScrollState()
+        val lazyListState = rememberLazyListState()
 
-        val modifier = if (isLandscape) {
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(scrollState)
-        } else {
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        }
+        val modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(16.dp)
 
-        if (videos.isEmpty()) {
-            Column(
-                modifier = modifier,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    fontSize = 26.sp,
-                    text = stringResource(R.string.gallery_empty),
-                )
-            }
-        }
-
-        Column(
+        LazyColumn(
             modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            state = lazyListState,
+            contentPadding = PaddingValues(bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            LazyColumn(
+            if (videos.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier.offset(y = 128.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            fontSize = 26.sp,
+                            text = stringResource(R.string.gallery_empty),
+                        )
+                    }
+                }
+            }
 
-            ) {
-                for ((index, videoFile) in videos.withIndex()) {
-                    val name = videoFile.name.removeSuffix(".mp4").replace("_", " ")
+            itemsIndexed(videos) { index, videoFile ->
+                val name = videoFile.name.removeSuffix(".mp4").replace("_", " ")
 
-                    item {
-                        Button(
-                            onClick = {
-                                val albumUri: Uri = FileProvider.getUriForFile(context,
-                                    "${context.packageName}.provider", videoFile)
+                Button(
+                    onClick = {
+                        val albumUri: Uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.provider", videoFile
+                        )
 
-                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(albumUri, "video/mp4")
-                                    flags =
-                                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-                                }
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(albumUri, "video/mp4")
+                            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
 
-                                context.startActivity(intent)
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                        context.startActivity(intent)
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(top = 12.dp, bottom = 12.dp),
+                        horizontalArrangement = Arrangement.Start,
+                    ) {
+                        val thumbnail = thumbnails[index]
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp))
                         ) {
-                            Row(
-                                modifier = Modifier.padding(top=12.dp, bottom=12.dp),
-                                horizontalArrangement = Arrangement.Start,
-                            ) {
-                                val thumbnail = thumbnails[index]
+                            if (thumbnail != null) {
+                                Image(
+                                    bitmap = thumbnail.asImageBitmap(),
+                                    contentDescription = stringResource(R.string.gallery_thumbnail_description),
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.matchParentSize()
+                                )
+                            } else {
                                 Box(
                                     modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                ) {
-                                    if (thumbnail != null) {
-                                        Image(
-                                            bitmap = thumbnail.asImageBitmap(),
-                                            contentDescription = stringResource(R.string.gallery_thumbnail_description),
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.matchParentSize()
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize()
-                                                .background(Color.Gray)
-                                        ) {}
-                                    }
-                                }
-
-                                Text(
-                                    modifier = Modifier
-                                        .padding(start = 12.dp)
-                                        .align(Alignment.CenterVertically)
-                                        .fillMaxWidth(),
-                                    fontSize = 18.sp,
-                                    maxLines = 3,
-                                    overflow = TextOverflow.Ellipsis,
-                                    text = name,
-                                )
+                                        .fillMaxSize()
+                                        .background(Color.Gray)
+                                ) {}
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 12.dp)
+                                .align(Alignment.CenterVertically)
+                                .fillMaxWidth(),
+                            fontSize = 18.sp,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            text = name,
+                        )
                     }
                 }
             }
