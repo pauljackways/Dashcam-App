@@ -23,14 +23,12 @@ class SpeedDetectionService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        println("STARTED!!!!")
         startForegroundService()
         startLocationUpdates()
         return START_STICKY
     }
 
     private fun startForegroundService() {
-        println("STARTED HERE!!!!!")
         NotificationHelper.createDrivingDetectionServiceNotificationChannel(this)
         val notification = NotificationHelper.getDrivingDetectionServiceNotification(this)
         startForeground(NotificationHelper.DRIVING_DETECTION_FOREGROUND_NOTIFICATION_ID, notification)

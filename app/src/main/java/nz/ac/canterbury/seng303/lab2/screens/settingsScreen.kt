@@ -35,7 +35,7 @@ fun Settings(navController: NavController) {
 
     val settings by settingsViewModel.settings.collectAsState()
 
-    var displayBackgroundLocationButton by remember { mutableStateOf(false) }
+    var displayBackgroundLocationButton: Boolean? by remember { mutableStateOf(false) }
 
     if (settings == null) {
         Text(text = stringResource(R.string.loading_settings))
@@ -175,7 +175,7 @@ fun Settings(navController: NavController) {
             // Enable Driving Detection Button
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (!SpeedDetectionService.hasPreciseLocationPermission(LocalContext.current)
-                    && !displayBackgroundLocationButton) {
+                    && displayBackgroundLocationButton == null) {
                     Text("To enable driving detection please allow additional permissions:")
                     Button(onClick = {
                         SpeedDetectionService.requestPreciseLocationPermission(context)
@@ -184,13 +184,13 @@ fun Settings(navController: NavController) {
                         Text("Allow permissions")
                     }
                 } else if (!SpeedDetectionService.hasBackgroundLocationPermission(LocalContext.current)
-                    && displayBackgroundLocationButton) {
+                    && displayBackgroundLocationButton == null || displayBackgroundLocationButton == true) {
                     Text("To enable driving detection please allow background location permissions:")
                     Button(onClick = {
                         SpeedDetectionService.requestBackgroundLocationPermission(context)
                         displayBackgroundLocationButton = false
                     }) {
-                        Text("Allow background location permissions")
+                        Text("Allow all the time")
                     }
                 }
             }
