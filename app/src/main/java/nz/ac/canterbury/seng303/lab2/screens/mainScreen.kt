@@ -196,7 +196,7 @@ fun MainScreen(
                                     }
                                     startRecording(
                                         context, previewView, videoCapture, lifecycleOwner,
-                                        cameraController, recordingLogicViewModel
+                                        cameraController, recordingLogicViewModel, settingsViewModel
                                     )
                                 }
                             }
@@ -410,7 +410,8 @@ private fun handleFinalizeEvent(
     lifecycleOwner: LifecycleOwner,
     cameraController: LifecycleCameraController,
     recordingLogicViewModel: RecordingLogicViewModel,
-    finalizeEvent: VideoRecordEvent.Finalize
+    finalizeEvent: VideoRecordEvent.Finalize,
+    settingsViewModel: SettingsViewModel
 ) {
     val uri = finalizeEvent.outputResults.outputUri
     Log.i("Camera", uri.toString())
@@ -436,7 +437,7 @@ private fun handleFinalizeEvent(
             }
         }
 
-        startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
+        startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel, settingsViewModel)
         recordingLogicViewModel.clearSaveRequest()
     } else {
         val mediaFiles = files.sortedByDescending { it.lastModified() }
@@ -452,7 +453,7 @@ private fun handleFinalizeEvent(
             )
         }
         if (recordingLogicViewModel.autoSaveRequested()) {
-            startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel)
+            startRecording(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel, settingsViewModel)
             recordingLogicViewModel.clearAutoSaveRequest()
         }
     }
@@ -460,7 +461,7 @@ private fun handleFinalizeEvent(
 
 
 @SuppressLint("MissingPermission", "NewApi")
-fun startRecording(context: Context, previewView: PreviewView, videoCapture: MutableState<VideoCapture<Recorder>?>, lifecycleOwner: LifecycleOwner, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel) {
+fun startRecording(context: Context, previewView: PreviewView, videoCapture: MutableState<VideoCapture<Recorder>?>, lifecycleOwner: LifecycleOwner, cameraController: LifecycleCameraController, recordingLogicViewModel: RecordingLogicViewModel, settingsViewModel: SettingsViewModel) {
     Log.d("Camera", "Start recording called")
 
     val outputFile = File(context.filesDir, convertTimestampToVideoTitle(System.currentTimeMillis()))
@@ -471,17 +472,17 @@ fun startRecording(context: Context, previewView: PreviewView, videoCapture: Mut
             videoCapture = vidCap,
             outputFile = outputFile,
             executor = context.mainExecutor,
-            audioEnabled = recordingLogicViewModel.audioEnable
+            audioEnabled = settingsViewModel.settings.value!!.audioEnable
         ) { event ->
             when (event) {
-                is VideoRecordEvent.Finalize -> handleFinalizeEvent(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel, event)
+                is VideoRecordEvent.Finalize -> handleFinalizeEvent(context, previewView, videoCapture, lifecycleOwner, cameraController, recordingLogicViewModel, event, settingsViewModel)
             }
         })
         recordingLogicViewModel.recordingStart = true
     }
 
     recordingLogicViewModel.startRecording()
-    startRecordingTimer(recordingLogicViewModel)
+    startRecordingTimer(recordingLogicViewModel, settingsViewModel)
 }
 
 
@@ -489,15 +490,15 @@ fun startRecording(context: Context, previewView: PreviewView, videoCapture: Mut
 private var handler: Handler? = null
 private var runnable: Runnable? = null
 
-fun startRecordingTimer(recordingLogicViewModel: RecordingLogicViewModel) {
+fun startRecordingTimer(recordingLogicViewModel: RecordingLogicViewModel, settingsViewModel: SettingsViewModel) {
     handler = Handler(Looper.getMainLooper())
     runnable = object : Runnable {
         override fun run() {
             recordingLogicViewModel.autoSave()
-            handler?.postDelayed(this, recordingLogicViewModel.intervalMillis)
+            handler?.postDelayed(this, settingsViewModel.settings.value!!.autoSaveIntervalMillis)
         }
     }
-    handler?.postDelayed(runnable!!, recordingLogicViewModel.intervalMillis)
+    handler?.postDelayed(runnable!!, settingsViewModel.settings.value!!.autoSaveIntervalMillis)
 }
 
 fun stopRecordingTimer() {

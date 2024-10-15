@@ -35,7 +35,7 @@ fun Settings(navController: NavController) {
 
     val settings by settingsViewModel.settings.collectAsState()
 
-    var displayBackgroundLocationButton: Boolean? by remember { mutableStateOf(false) }
+    var displayBackgroundLocationButton: Boolean? by remember { mutableStateOf(null) }
 
     if (settings == null) {
         Text(text = stringResource(R.string.loading_settings))
@@ -98,25 +98,6 @@ fun Settings(navController: NavController) {
             modifier = modifier,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Video Length Slider
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = stringResource(R.string.video_length) +
-                        ": $tempVideoLength " + stringResource(R.string.seconds))
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Slider(
-                        value = tempVideoLength.toFloat(),
-                        onValueChange = { newValue ->
-                            tempVideoLength = newValue.toInt()
-                        },
-                        valueRange = 10f..60f,
-                        modifier = if (isLandscape) Modifier.fillMaxWidth(0.9f) else Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
             val sensitivityRange = 15f..40f
             Column(modifier = Modifier.fillMaxWidth()) {
                 val sensitivityPercentage = ((tempCrashSensitivity - sensitivityRange.start) / (sensitivityRange.endInclusive - sensitivityRange.start)) * 100
